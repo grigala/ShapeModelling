@@ -2,7 +2,9 @@ package ch.unibas.cs.shm
 
 import java.io.File
 
-import scalismo.io.MeshIO
+import scalismo.geometry._3D
+import scalismo.io.{LandmarkIO, MeshIO}
+import scalismo.registration.LandmarkRegistration
 import scalismo.ui.api.SimpleAPI.ScalismoUI
 
 /**
@@ -14,7 +16,27 @@ object Launcher {
     scalismo.initialize()
 
     val ui = ScalismoUI()
-    val mesh = MeshIO.readMesh(new File("data/facemesh.stl")).get
-    val meshView = ui.show(mesh, "face")
+
+    val meshes = new File("data/SMIR/meshes/").listFiles().take(10)
+    val refMesh = new File("data/femur.stl")
+    val refLandmark = new File("data/femur.json")
+    val landmarks = new File("data/SMIR/landmarks/").listFiles().take(10)
+
+    val meshesDataset = meshes.map{f: File => MeshIO.readMesh(f).get}
+    val refMeshData = MeshIO.readMesh(refMesh).get
+    // show ref femur bone
+    ui.show(refMeshData, "femur_ref")
+
+
+    // load landmarks, add them to femurs
+    val landmarksDataset = landmarks.map{f: File => LandmarkIO.readLandmarksJson[_3D](f).get}
+    val refLandmarkData = LandmarkIO.readLandmarksJson[_3D](refLandmark).get
+
+    val bestTransforms = (0 until 10).map{i: Int => LandmarkRegistration.rigid3DLandmarkRegistration(landmarksDataset(i), refLandmarkData)}
+    val alignedFemurs = (0 until 10).map{i: Int => meshesDataset(i).transform(bestTransforms(i))}
+
+    (0 until 10).foreach{i: Int => ui.show(alignedFemurs(i), "femur_"+i)}
+
+
   }
 }
