@@ -17,25 +17,28 @@ object Launcher {
 
     val ui = ScalismoUI()
 
-    val meshes = new File("data/SMIR/meshes/").listFiles().take(10)
+    // For demo please use reduced amount of samples i.e. 5 or 10
+    // Otherwise it will ate your RAM :)
+    val meshes = new File("data/SMIR/meshes/").listFiles().take(50)
+    val landmarks = new File("data/SMIR/landmarks/").listFiles().take(50)
     val refMesh = new File("data/femur.stl")
     val refLandmark = new File("data/femur.json")
-    val landmarks = new File("data/SMIR/landmarks/").listFiles().take(10)
 
     val meshesDataset = meshes.map{f: File => MeshIO.readMesh(f).get}
     val refMeshData = MeshIO.readMesh(refMesh).get
-    // show ref femur bone
+
+    // show reference femur bone
     ui.show(refMeshData, "femur_ref")
 
 
-    // load landmarks, add them to femurs
+    // load landmarks, and add them to femurs
     val landmarksDataset = landmarks.map{f: File => LandmarkIO.readLandmarksJson[_3D](f).get}
     val refLandmarkData = LandmarkIO.readLandmarksJson[_3D](refLandmark).get
 
-    val bestTransforms = (0 until 10).map{i: Int => LandmarkRegistration.rigid3DLandmarkRegistration(landmarksDataset(i), refLandmarkData)}
-    val alignedFemurs = (0 until 10).map{i: Int => meshesDataset(i).transform(bestTransforms(i))}
+    val bestTransforms = (0 until 50).map{i: Int => LandmarkRegistration.rigid3DLandmarkRegistration(landmarksDataset(i), refLandmarkData)}
+    val alignedFemurs = (0 until 50).map{i: Int => meshesDataset(i).transform(bestTransforms(i))}
 
-    (0 until 10).foreach{i: Int => ui.show(alignedFemurs(i), "femur_"+i)}
+    (0 until 50).foreach{i: Int => ui.show(alignedFemurs(i), "femur_"+i)}
 
 
   }
