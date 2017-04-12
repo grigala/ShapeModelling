@@ -18,13 +18,11 @@ object FitFemur {
 
   def main(args: Array[String]) {
 
-    // required to initialize native libraries (VTK, HDF5 ..)
     scalismo.initialize()
 
-    // create a visualization window
     val ui = ScalismoUI()
 
-    /////////////////////Load Files
+    println("Loading models...")
     val files = new File("data/SMIR/meshes/").listFiles().take(50)
     val refFile = new File("data/femur.stl")
     val refLandmFile = new File("data/femur.json")
@@ -32,7 +30,6 @@ object FitFemur {
 
     val femur_ref = MeshIO.readMesh(refFile).get
 
-    /////////////////////////////////////////////////////////////////
 
 
     val dataSet = files.map { f: File => MeshIO.readMesh(f).get }
@@ -50,6 +47,7 @@ object FitFemur {
     val gp = DiscreteLowRankGaussianProcess.createUsingPCA(femur_ref, continuousFields)
     val model = StatisticalMeshModel(femur_ref, gp.interpolateNearestNeighbor)
     ui.show(model, "model")
+
     //val refData = MeshIO.readMesh(refFile).get
     // show ref femur bone
     //ui.show(refData, "femur_ref")
