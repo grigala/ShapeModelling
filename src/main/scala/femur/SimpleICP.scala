@@ -18,7 +18,7 @@ object SimpleICP {
     scalismo.initialize()
 
     ////////////////////SETTINGS FOR ICP
-    val numIterations = 10
+    val numIterations = 15
     val noise = NDimensionalNormalDistribution(Vector(0,0,0), SquareMatrix((1f,0,0), (0,1f,0), (0,0,1f)))
 
     // create a visualization window
@@ -41,6 +41,7 @@ object SimpleICP {
 
     val pointSamples = UniformMeshSampler3D(model.mean, 5000, 42).sample.map(s => s._1)
     val pointIds = pointSamples.map{s => model.mean.findClosestPoint(s).id}
+    //println(pointIds.take(10))
 
     def attributeCorrespondences(pts : Seq[Point[_3D]]) : Seq[Point[_3D]] = {
       pts.map{pt => target.findClosestPoint(pt).point}
@@ -54,23 +55,26 @@ object SimpleICP {
       posterior.mean
     }
 
-    def recursion(currentPoints : Seq[Point[_3D]], nbIterations : Int) : Unit= {
+    def recursion(currentPoints : Seq[Point[_3D]], nbIterations : Int) : Seq[Point[_3D]]= {
 
       val candidates = attributeCorrespondences(currentPoints)
       val fit = fitModel(pointIds, candidates)
-      ui.remove("fit")
-      ui.show(fit,"fit")
-
-      val newPoints= pointIds.map(id => fit.point(id))
-
+      val newPoints = pointIds.map(id => fit.point(id))
       if(nbIterations> 0) {
         //Thread.sleep(3000)
         recursion(newPoints, nbIterations - 1)
+      }else{
+        ui.remove("fit")
+        ui.show(fit,"fit")
       }
+      candidates
     }
 
-    recursion( pointIds.map(id => model.mean.point(id)) , numIterations)
-
+    val targetCorrespPoints = recursion( pointIds.map(id => model.mean.point(id)) , numIterations)
+    val refCorrespPoints = pointSamples
+    //println(pointIds.map(id => model.mean.point(id)).take(10))
+    ui.show(targetCorrespPoints, "targetPoints")
+    ui.show(refCorrespPoints, "referencePoints")
     print("done")
   }
 }
