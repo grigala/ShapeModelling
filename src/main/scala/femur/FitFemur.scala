@@ -30,7 +30,7 @@ object FitFemur {
 
     println("Loading and displaying statistical shape model...")
     val model: StatisticalMeshModel = StatismoIO.readStatismoMeshModel(new File("data/augmented_shape_model.h5")).get
-    ui.show(model, "model")
+    //ui.show(model, "model")
 
 
     val pointSamples = UniformMeshSampler3D(model.mean, 5000, 42).sample.map(s => s._1)

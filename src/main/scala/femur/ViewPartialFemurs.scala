@@ -1,6 +1,7 @@
 import java.io.File
 
-import scalismo.io.{MeshIO, StatismoIO}
+import scalismo.geometry._3D
+import scalismo.io.{LandmarkIO, MeshIO, StatismoIO}
 import scalismo.mesh.TriangleMesh
 import scalismo.statisticalmodel.StatisticalMeshModel
 import scalismo.ui.api.SimpleAPI.ScalismoUI
@@ -16,6 +17,7 @@ object ViewPartialFemurs {
 
     val ui = ScalismoUI()
 
+    val modelLandmarks = LandmarkIO.readLandmarksJson[_3D](new File("data/femur.json")).get
     println("Loading and displaying partial mesh...")
     val partialShape0: TriangleMesh = MeshIO.readMesh(new File("data/partials/VSD.Right_femur.XX.XX.OT.101147.0.stl")).get
     val partialShape1: TriangleMesh = MeshIO.readMesh(new File("data/partials/VSD.Right_femur.XX.XX.OT.101148.0.stl")).get
@@ -40,6 +42,9 @@ object ViewPartialFemurs {
 
     println("Loading and displaying statistical shape model...")
     val model: StatisticalMeshModel = StatismoIO.readStatismoMeshModel(new File("data/data_shape_model.h5")).get
+
     ui.show(model, "model")
+
+    ui.addLandmarksTo(modelLandmarks, "model")
   }
 }

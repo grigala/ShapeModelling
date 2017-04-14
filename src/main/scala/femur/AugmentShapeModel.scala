@@ -22,7 +22,7 @@ object AugmentShapeModel {
     scalismo.initialize()
 
     // create a visualization window
-    val ui = ScalismoUI()
+    //val ui = ScalismoUI()
     ///////load files
     val dataShapeModel = new File("data/data_shape_model.h5")
     val referenceShapeModel = new File("data/reference_shape_model.h5")
@@ -34,9 +34,9 @@ object AugmentShapeModel {
     //val model = StatismoIO.readStatismoMeshModel(referenceShapeModel).get
     println("create custom kernel...")
     val zeroMean = VectorField(RealSpace[_3D], (pt:Point[_3D]) => Vector(0,0,0))
-    val l = 100
-    val scalarValuedKernel = GaussianKernel[_3D](l) * 1
-    val s = Array[Double](15, 15, 150)
+    val l = 30
+    val scalarValuedKernel = GaussianKernel[_3D](l) * 2
+    val s = Array[Double](10, 10, 10)
     val matrixValuedKernel = DiagonalKernel(scalarValuedKernel * s(0), scalarValuedKernel * s(1), scalarValuedKernel * s(2))
 
     val kernelGP = GaussianProcess(zeroMean, matrixValuedKernel)
@@ -50,7 +50,7 @@ object AugmentShapeModel {
     val lowRankGP: LowRankGaussianProcess[_3D, _3D] = LowRankGaussianProcess.approximateGP(gp, sampler, 20)
     val finalModel = StatisticalMeshModel(refFemur, lowRankGP)
 
-    ui.show(finalModel, "augmented model")
+    //ui.show(finalModel, "augmented model")
     StatismoIO.writeStatismoMeshModel(finalModel, new File("data/augmented_shape_model.h5"))
     println("done")
     //ui.show(transformationField, "deformations")
