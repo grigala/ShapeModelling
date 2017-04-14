@@ -12,12 +12,12 @@ object SimpleICP {
 
   def main(args: Array[String]) {
 
-    // required to initialize native libraries (VTK, HDF5 ..)
-    scalismo.initialize()
-
     ////////////////////SETTINGS FOR ICP
     val numIterations = 15
     val noise = NDimensionalNormalDistribution(Vector(0, 0, 0), SquareMatrix((1f, 0, 0), (0, 1f, 0), (0, 0, 1f)))
+
+    // required to initialize native libraries (VTK, HDF5 ..)
+    scalismo.initialize()
 
     // create a visualization window
     val ui = ScalismoUI()
@@ -30,30 +30,25 @@ object SimpleICP {
     val referenceShapeModel = new File("data/reference_shape_model.h5")
     /////////////////////////////////////////////////////////////////
 
+    val refFemur = MeshIO.readMesh(refFile).get
     val model = StatismoIO.readStatismoMeshModel(referenceShapeModel).get
-    ui.show(model, "model")
 
-    val target = MeshIO.readMesh(new File("data/aligned/meshes/femur_0.stl")).get
-    //ui.show(target,"target")
+    //val target = MeshIO.readMesh(new File("data/aligned/meshes/femur_0.stl")).get
+    //val transformationField: DiscreteVectorField[_3D, _3D] =
+    //  calcCorrespondentTransformationsICP(model, target, noise, numIterations)
+    println("Calculate transformation fields from data...")
+    val dataset = files.map { f: File => MeshIO.readMesh(f).get }
+    val transformationFields : IndexedSeq[DiscreteVectorField[_3D, _3D]] = dataset.map{ targetMesh =>
+      calcCorrespondentTransformationsICP(model, targetMesh, noise, numIterations)
+    }
+    println("Calculate Statistical Mesh Model from data...")
+    val continuousFields = transformationFields.map(f => f.interpolateNearestNeighbor)
+    val dataGP = DiscreteLowRankGaussianProcess.createUsingPCA(refFemur, continuousFields)
+    val finalModel = StatisticalMeshModel(refFemur, dataGP.interpolateNearestNeighbor)
+    ui.show(finalModel, "dataShapeModel")
 
-    //model: StatisticalMeshModel, target: TriangleMesh, noise:
-    //   NDimensionalNormalDistribution[_3D], numIterations: Int)
-    val transformationField: DiscreteVectorField[_3D, _3D] =
-    calcCorrespondentTransformationsICP(model, target, noise, numIterations)
+    //ui.show(transformationField, "deformations")
 
-
-    ui.show(transformationField, "deformations")
-
-
-    //println(pointIds.take(10))
-    //println(targetIDs.take(10))
-    //println(pointIds.length)
-    //println(targetIDs.length)
-
-    //val refPoints = targetIDs.slice(5,6).map{id => model.mean.point(id)}
-    //val targetPoints = targetIDs.slice(5,6).map{id => target.point(id)}
-    //ui.show(refPoints, "refPoints")
-    //ui.show(targetPoints, "targetPoints")
     print("done")
   }
 }
