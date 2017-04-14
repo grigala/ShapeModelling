@@ -67,9 +67,9 @@
     <orderEntry type="library" name="SBT: com.github.fommil.netlib:native_ref-java:1.1:jar" level="project" />
     <orderEntry type="library" name="SBT: com.github.fommil.netlib:core:1.1.2:jar" level="project" />
     <orderEntry type="library" name="SBT: com.github.fommil:jniloader:1.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: ch.unibas.cs.gravis:scalismo_2.11:0.10.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: ch.unibas.cs.gravis:scalismo-ui_2.11:0.6.2:jar" level="project" />
     <orderEntry type="library" name="SBT: ch.unibas.cs.gravis:scalismo-native-stub:3.0.0:jar" level="project" />
     <orderEntry type="library" name="SBT: ch.unibas.cs.gravis:scalismo-native-all:3.0.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: ch.unibas.cs.gravis:scalismo-ui_2.11:0.6.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: ch.unibas.cs.gravis:scalismo_2.11:0.10.0:jar" level="project" />
   </component>
 </module>

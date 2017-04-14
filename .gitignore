@@ -83,3 +83,4 @@ fabric.properties
 # Data
 /data/SMIR
 /data/aligned
+*.h5
