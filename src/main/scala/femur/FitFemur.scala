@@ -2,16 +2,14 @@ package femur
 
 import java.io.File
 
-import scalismo.common._
+import breeze.linalg.norm
+import scalismo.common.{DiscreteVectorField, PointId, UnstructuredPointsDomain}
 import scalismo.geometry._
 import scalismo.io._
-import scalismo.kernels._
-import scalismo.numerics._
-import scalismo.registration.{LandmarkRegistration, Transformation}
+import scalismo.mesh.TriangleMesh
+import scalismo.numerics.UniformMeshSampler3D
 import scalismo.statisticalmodel._
 import scalismo.ui.api.SimpleAPI.ScalismoUI
-import scalismo.geometry.Landmark
-import scalismo.statisticalmodel.dataset.{DataCollection, DataItem}
 
 
 object FitFemur {
@@ -20,82 +18,67 @@ object FitFemur {
 
     scalismo.initialize()
 
+    ////////////////////SETTINGS FOR ICP
+    val numIterations = 20
+    val noise = NDimensionalNormalDistribution(Vector(0, 0, 0), SquareMatrix((1f, 0, 0), (0, 1f, 0), (0, 0, 1f)))
+
     val ui = ScalismoUI()
 
-    println("Loading models...")
-    val files = new File("data/SMIR/meshes/").listFiles().take(50)
-    val refFile = new File("data/femur.stl")
-    val refLandmFile = new File("data/femur.json")
-    val landmFiles = new File("data/aligned/landmarks/").listFiles().take(50)
+    println("Loading and displaying partial mesh...")
+    val target: TriangleMesh = MeshIO.readMesh(new File("data/partials/VSD.Right_femur.XX.XX.OT.101147.0.stl")).get
+    ui.show(target, "partialShape")
 
-    val femur_ref = MeshIO.readMesh(refFile).get
+    println("Loading and displaying statistical shape model...")
+    val model: StatisticalMeshModel = StatismoIO.readStatismoMeshModel(new File("data/augmented_shape_model.h5")).get
+    ui.show(model, "model")
 
 
+    val pointSamples = UniformMeshSampler3D(model.mean, 5000, 42).sample.map(s => s._1)
+    val pointIds = pointSamples.map { s => model.mean.findClosestPoint(s).id }
+    val p = new Point3D(-40.558f,26.1689f,-208.722f)
+    val correctedPointIds = pointIds.filter{ id : PointId =>   (model.referenceMesh.point(id) - p).norm > 62}
+    //ui.show(correctedPointIds.map{id => model.mean.point(id)}, "points")
 
-    val dataSet = files.map { f: File => MeshIO.readMesh(f).get }
-    val numPoints = dataSet.map(m => m.pointIds.length)
-    numPoints.foreach(i => println(i))
-
-     val defFields :IndexedSeq[DiscreteVectorField[_3D,_3D]] = dataSet.map{ m =>
-      val deformationVectors = femur_ref.pointIds.map{ id : PointId =>
-        m.findClosestPoint(femur_ref.point(id)).point - femur_ref.point(id)
-      }.toIndexedSeq
-
-      DiscreteVectorField(femur_ref, deformationVectors)
+    def attributeCorrespondences(pts: Seq[Point[_3D]]): Seq[Point[_3D]] = {
+      pts.map { pt => target.findClosestPoint(pt).point }
     }
-    val continuousFields = defFields.map(f => f.interpolateNearestNeighbor )
-    val gp = DiscreteLowRankGaussianProcess.createUsingPCA(femur_ref, continuousFields)
-    val model = StatisticalMeshModel(femur_ref, gp.interpolateNearestNeighbor)
-    ui.show(model, "model")
 
-    //val refData = MeshIO.readMesh(refFile).get
-    // show ref femur bone
-    //ui.show(refData, "femur_ref")
-
-
-
-    //(0 until 50).foreach { i: Int => ui.show(alignedFemurs(i), "femur_" + i) }
-    /*
-      val defFields :IndexedSeq[DiscreteVectorField[_3D,_3D]] = alignedFemurs.map{ m =>
-        val deformationVectors = refData.pointIds.map{ id : PointId =>
-          m.point(id) - refData.point(id)
-        }.toIndexedSeq
-
-        DiscreteVectorField(refData, deformationVectors)
+    def fitModel(pointIds: IndexedSeq[PointId], candidateCorresp: Seq[Point[_3D]]): TriangleMesh = {
+      val trainingData = (pointIds zip candidateCorresp).map { case (mId, pPt) =>
+        (mId, pPt, noise)
       }
+      val posterior = model.posterior(trainingData.toIndexedSeq)
+      posterior.mean
+    }
 
-      val continuousFields = defFields.map(f => f.interpolateNearestNeighbor )
-      val gp = DiscreteLowRankGaussianProcess.createUsingPCA(refData, continuousFields)
+    def recursion(currentPoints: Seq[Point[_3D]], nbIterations: Int): Seq[Point[_3D]] = {
 
-      val model = StatisticalMeshModel(refData, gp.interpolateNearestNeighbor)
-      ui.show(model, "data_model")
-  */
+      val candidates = attributeCorrespondences(currentPoints)
+      val fit = fitModel(correctedPointIds, candidates)
+      val newPoints = correctedPointIds.map(id => fit.point(id))
+      if (nbIterations > 0) {
+        //Thread.sleep(1000)
 
-    //////////////////////////////////////////////////////////////
-    /*
-    val femur_ref = MeshIO.readMesh(refFile).get
-
-    val zeroMean = VectorField(RealSpace[_3D], (pt: Point[_3D]) => Vector(0, 0, 0))
-
-    val l = 80
-    val scalarValuedKernel = GaussianKernel[_3D](l) * 1
-    val s = Array[Double](10, 10, 250)
-    val matrixValuedKernel = DiagonalKernel(scalarValuedKernel * s(0), scalarValuedKernel * s(1), scalarValuedKernel * s(2))
-
-    val gp2 = GaussianProcess(zeroMean, matrixValuedKernel)
-
-    val sampler = RandomMeshSampler3D(femur_ref, 500, 42)
-    val lowrankGP: LowRankGaussianProcess[_3D, _3D] = LowRankGaussianProcess.approximateGP(gp2, sampler, 30)
+        recursion(newPoints, nbIterations - 1)
+      } else {
+        ui.remove("fit")
+        ui.show(fit,"fit")
+        newPoints
+      }
+    }
 
 
-    val model = StatisticalMeshModel(femur_ref, lowrankGP)
+    val fittedModelPoints = recursion(correctedPointIds.map(id => model.mean.point(id)), numIterations)
+    val targetPoints = attributeCorrespondences(fittedModelPoints)
+    val refPoints = correctedPointIds.map(id => model.mean.point(id))
 
-    // show ref femur bone
-    ui.show(femur_ref, "femur_ref")
-    // show statistical model with custom kernel
-    ui.show(model, "model")
+    val domain = UnstructuredPointsDomain[_3D](refPoints.toIndexedSeq)
+    val diff = refPoints.zip(targetPoints).map { case (mPt, pPt) => pPt - mPt }
 
-  */
+    DiscreteVectorField(domain, diff.toIndexedSeq)
+
+
     print("done")
+
   }
 }

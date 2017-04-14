@@ -36,7 +36,7 @@ object AugmentShapeModel {
     val zeroMean = VectorField(RealSpace[_3D], (pt:Point[_3D]) => Vector(0,0,0))
     val l = 100
     val scalarValuedKernel = GaussianKernel[_3D](l) * 1
-    val s = Array[Double](15, 15, 250)
+    val s = Array[Double](15, 15, 150)
     val matrixValuedKernel = DiagonalKernel(scalarValuedKernel * s(0), scalarValuedKernel * s(1), scalarValuedKernel * s(2))
 
     val kernelGP = GaussianProcess(zeroMean, matrixValuedKernel)
@@ -51,6 +51,8 @@ object AugmentShapeModel {
     val finalModel = StatisticalMeshModel(refFemur, lowRankGP)
 
     ui.show(finalModel, "augmented model")
+    StatismoIO.writeStatismoMeshModel(finalModel, new File("data/augmented_shape_model.h5"))
+    println("done")
     //ui.show(transformationField, "deformations")
 
   }
