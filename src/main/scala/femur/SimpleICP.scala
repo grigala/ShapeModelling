@@ -39,7 +39,7 @@ object SimpleICP {
     //val targetSampler = RandomMeshSampler3D(target, 500, 42)
     ui.show(target,"target")
 
-    val pointSamples = UniformMeshSampler3D(model.mean, 5000, 42).sample.map(s => s._1)
+    val pointSamples = UniformMeshSampler3D(model.mean, 12000, 42).sample.map(s => s._1)
     val pointIds = pointSamples.map{s => model.mean.findClosestPoint(s).id}
     //println(pointIds.take(10))
 
@@ -66,15 +66,29 @@ object SimpleICP {
       }else{
         ui.remove("fit")
         ui.show(fit,"fit")
+        newPoints
       }
-      candidates
     }
 
-    val targetCorrespPoints = recursion( pointIds.map(id => model.mean.point(id)) , numIterations)
-    val refCorrespPoints = pointSamples
-    //println(pointIds.map(id => model.mean.point(id)).take(10))
-    ui.show(targetCorrespPoints, "targetPoints")
-    ui.show(refCorrespPoints, "referencePoints")
+    val newPoints = recursion( pointIds.map(id => model.mean.point(id)) , numIterations)
+    val targetPoints = attributeCorrespondences(newPoints)
+    val refPoints = pointIds.map(id => model.mean.point(id))
+
+    val domain = UnstructuredPointsDomain[_3D](refPoints.toIndexedSeq)
+    val values =  (refPoints.zip(targetPoints)).map{case (mPt, pPt) => pPt - mPt}
+    val field = DiscreteVectorField(domain, values.toIndexedSeq)
+    ui.show(field, "deformations")
+
+
+    //println(pointIds.take(10))
+    //println(targetIDs.take(10))
+    //println(pointIds.length)
+    //println(targetIDs.length)
+
+    //val refPoints = targetIDs.slice(5,6).map{id => model.mean.point(id)}
+    //val targetPoints = targetIDs.slice(5,6).map{id => target.point(id)}
+    ui.show(refPoints, "refPoints")
+    ui.show(targetPoints, "targetPoints")
     print("done")
   }
 }
