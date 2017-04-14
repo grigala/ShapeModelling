@@ -49,7 +49,7 @@ package object femur {
     val refPoints = pointIds.map(id => model.mean.point(id))
 
     val domain = UnstructuredPointsDomain[_3D](refPoints.toIndexedSeq)
-    val diff = (refPoints.zip(targetPoints)).map { case (mPt, pPt) => pPt - mPt }
+    val diff = refPoints.zip(targetPoints).map { case (mPt, pPt) => pPt - mPt }
 
     DiscreteVectorField(domain, diff.toIndexedSeq)
   }

@@ -6,7 +6,9 @@ import scalismo.common.{DiscreteVectorField, RealSpace, VectorField}
 import scalismo.geometry.{Point, Vector, _3D}
 import scalismo.io.MeshIO
 import scalismo.kernels.{DiagonalKernel, GaussianKernel, MatrixValuedPDKernel, PDKernel}
-import scalismo.numerics.RandomMeshSampler3D
+import scalismo.mesh.Mesh
+import scalismo.numerics.{GradientDescentOptimizer, RandomMeshSampler3D}
+import scalismo.registration._
 import scalismo.statisticalmodel.{GaussianProcess, LowRankGaussianProcess, StatisticalMeshModel}
 import scalismo.ui.api.SimpleAPI.ScalismoUI
 
@@ -56,13 +58,13 @@ object Launcher {
     val lowrankGP : LowRankGaussianProcess[_3D, _3D] = LowRankGaussianProcess.approximateGP(gp, sampler, 100)
     val sample = lowrankGP.sampleAtPoints(femur_ref)
     println("Showing samples: " + sample.toString())
-    ui.show(sample, "gaussianKernelGP_sample")
+    //ui.show(sample, "gaussianKernelGP_sample")
 
 
 
     println("Applying transformation...")
     val transform =  transformFromDefField(sample)
-    ui.show(femur_ref.transform(transformFromDefField(sample)), "femur_warped")
+    //ui.show(femur_ref.transform(transformFromDefField(sample)), "femur_warped")
 
 
     println("Rendering statistical mesh model...")
@@ -70,6 +72,31 @@ object Launcher {
     ui.show(model, "femur_model")
     println("Launch process ended")
 
+    val targetMesh = MeshIO.readMesh(new File("data/aligned/meshes/femur_0.stl")).get
+    val meshView = ui.show(targetMesh, "targetMesh")
 
+    println("sampling again")
+    val evaluationSampler = RandomMeshSampler3D(femur_ref, 1000, 42)
+
+    println("registration")
+    val regConfig = RegistrationConfiguration(
+      optimizer = GradientDescentOptimizer(numIterations = 50, stepLength = 0.1),
+      metric = MeanSquaresMetric(evaluationSampler),
+      transformationSpace = GaussianProcessTransformationSpace(lowrankGP),
+      regularizationWeight = 1e-8,
+      regularizer = L2Regularizer
+    )
+
+    val fixedImage = Mesh.meshToDistanceImage(femur_ref)
+    val movingImage = Mesh.meshToDistanceImage(targetMesh)
+
+    println("iteration")
+    val regIterator = Registration.iterations(regConfig)(fixedImage, movingImage)
+
+    val resultIterator = for ((it, itnum) <- regIterator.zipWithIndex) yield {
+      println(s"object value in iteration $itnum is ${it.optimizerState.value}")
+      it.registrationResult
+    }
+    println("done")
   }
 }
