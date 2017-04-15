@@ -21,7 +21,7 @@ object FitFemur {
     ////////////////////SETTINGS FOR ICP
     val numIterations = 50
     val noise = NDimensionalNormalDistribution(Vector(0, 0, 0), SquareMatrix((1f, 0, 0), (0, 1f, 0), (0, 0, 1f)))
-//
+    //
     val ui = ScalismoUI()
 
     println("Loading and displaying partial mesh...")
@@ -50,49 +50,49 @@ object FitFemur {
     //val correctedPointIds = correctedPointIdsA.union(correctedPointIdsB)
 
     //Femur 5
+    val correctedPointIds = pointIds.filter { id: PointId => model.referenceMesh.point(id).z > -30.639 }
 
-    val correctedPointIds = pointIds.filter{ id : PointId =>   model.referenceMesh.point(id).z > -30.639 }
-    ui.show(correctedPointIds.map{id => model.mean.point(id)}, "points")
+    ui.show(correctedPointIds.map { id => model.mean.point(id) }, "points")
 
 
-      def attributeCorrespondences(pts: Seq[Point[_3D]]): Seq[Point[_3D]] = {
-        pts.map { pt => target.findClosestPoint(pt).point }
+    def attributeCorrespondences(pts: Seq[Point[_3D]]): Seq[Point[_3D]] = {
+      pts.map { pt => target.findClosestPoint(pt).point }
+    }
+
+    def fitModel(pointIds: IndexedSeq[PointId], candidateCorresp: Seq[Point[_3D]]): TriangleMesh = {
+      val trainingData = (pointIds zip candidateCorresp).map { case (mId, pPt) =>
+        (mId, pPt, noise)
       }
+      val posterior = model.posterior(trainingData.toIndexedSeq)
+      posterior.mean
+    }
 
-      def fitModel(pointIds: IndexedSeq[PointId], candidateCorresp: Seq[Point[_3D]]): TriangleMesh = {
-        val trainingData = (pointIds zip candidateCorresp).map { case (mId, pPt) =>
-          (mId, pPt, noise)
-        }
-        val posterior = model.posterior(trainingData.toIndexedSeq)
-        posterior.mean
+    def recursion(currentPoints: Seq[Point[_3D]], nbIterations: Int): Seq[Point[_3D]] = {
+
+      val candidates = attributeCorrespondences(currentPoints)
+      val fit = fitModel(correctedPointIds, candidates)
+      val newPoints = correctedPointIds.map(id => fit.point(id))
+      if (nbIterations > 0) {
+        //Thread.sleep(1000)
+
+        recursion(newPoints, nbIterations - 1)
+      } else {
+        ui.remove("fit")
+        ui.show(fit, "fit")
+        newPoints
       }
-
-      def recursion(currentPoints: Seq[Point[_3D]], nbIterations: Int): Seq[Point[_3D]] = {
-
-        val candidates = attributeCorrespondences(currentPoints)
-        val fit = fitModel(correctedPointIds, candidates)
-        val newPoints = correctedPointIds.map(id => fit.point(id))
-        if (nbIterations > 0) {
-          //Thread.sleep(1000)
-
-          recursion(newPoints, nbIterations - 1)
-        } else {
-          ui.remove("fit")
-          ui.show(fit,"fit")
-          newPoints
-        }
-      }
+    }
 
 
-      println("Performing fitting recursion and calculating correspondences...")
-      val fittedModelPoints = recursion(correctedPointIds.map(id => model.mean.point(id)), numIterations)
-      val targetPoints = attributeCorrespondences(fittedModelPoints)
-      val refPoints = correctedPointIds.map(id => model.mean.point(id))
+    println("Performing fitting recursion and calculating correspondences...")
+    val fittedModelPoints = recursion(correctedPointIds.map(id => model.mean.point(id)), numIterations)
+    val targetPoints = attributeCorrespondences(fittedModelPoints)
+    val refPoints = correctedPointIds.map(id => model.mean.point(id))
 
-      val domain = UnstructuredPointsDomain[_3D](refPoints.toIndexedSeq)
-      val diff = refPoints.zip(targetPoints).map { case (mPt, pPt) => pPt - mPt }
+    val domain = UnstructuredPointsDomain[_3D](refPoints.toIndexedSeq)
+    val diff = refPoints.zip(targetPoints).map { case (mPt, pPt) => pPt - mPt }
 
-      DiscreteVectorField(domain, diff.toIndexedSeq)
+    DiscreteVectorField(domain, diff.toIndexedSeq)
 
 
     print("done")
