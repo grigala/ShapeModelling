@@ -53,6 +53,7 @@ object FitFemur {
     //val correctedPointIds = pointIds.filter { id: PointId => model.referenceMesh.point(id).z > -30.639 }
 
     //Femur 6
+    //from tries: best with data Model, 50 iterations
     val correctedPointIds = pointIds.filter { id: PointId =>  model.referenceMesh.point(id).z < -136 ||
                                                               model.referenceMesh.point(id).z > 158 }
 
