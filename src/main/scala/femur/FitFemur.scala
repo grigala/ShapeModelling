@@ -29,7 +29,7 @@ object FitFemur {
     ui.show(target, "partialShape")
 
     println("Loading and displaying statistical shape model...")
-    val model: StatisticalMeshModel = StatismoIO.readStatismoMeshModel(new File("data/augmented_shape_model.h5")).get
+    val model: StatisticalMeshModel = StatismoIO.readStatismoMeshModel(new File("data/data_shape_model.h5")).get
     ui.show(model, "model")
 
 
