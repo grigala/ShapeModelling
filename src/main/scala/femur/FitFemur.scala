@@ -19,7 +19,7 @@ object FitFemur {
     scalismo.initialize()
 
     ////////////////////SETTINGS FOR ICP
-    val numIterations = 20
+    val numIterations = 50
     val noise = NDimensionalNormalDistribution(Vector(0, 0, 0), SquareMatrix((1f, 0, 0), (0, 1f, 0), (0, 0, 1f)))
 
     val ui = ScalismoUI()
@@ -29,15 +29,21 @@ object FitFemur {
     ui.show(target, "partialShape")
 
     println("Loading and displaying statistical shape model...")
-    val model: StatisticalMeshModel = StatismoIO.readStatismoMeshModel(new File("data/augmented_shape_model.h5")).get
-    //ui.show(model, "model")
+    val model: StatisticalMeshModel = StatismoIO.readStatismoMeshModel(new File("data/data_shape_model.h5")).get
+    ui.show(model, "model")
 
 
     val pointSamples = UniformMeshSampler3D(model.mean, 5000, 42).sample.map(s => s._1)
     val pointIds = pointSamples.map { s => model.mean.findClosestPoint(s).id }
-    val p = Point3D(-40.558f, 26.1689f, -208.722f)
-    val correctedPointIds = pointIds.filter{ id : PointId =>   (model.referenceMesh.point(id) - p).norm > 62}
-    //ui.show(correctedPointIds.map{id => model.mean.point(id)}, "points")
+
+    //Femur 1
+    //val p = new Point3D(-40.558f, 26.1689f, -208.722f)
+    //val correctedPointIds = pointIds.filter{ id : PointId =>   (model.referenceMesh.point(id) - p).norm > 62}
+
+    //Femur 2
+    val correctedPointIds = pointIds.filter{ id : PointId =>   model.referenceMesh.point(id).z <72.7622 }
+
+    ui.show(correctedPointIds.map{id => model.mean.point(id)}, "points")
 
     def attributeCorrespondences(pts: Seq[Point[_3D]]): Seq[Point[_3D]] = {
       pts.map { pt => target.findClosestPoint(pt).point }
