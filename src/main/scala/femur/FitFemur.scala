@@ -25,7 +25,7 @@ object FitFemur {
     val ui = ScalismoUI()
 
     println("Loading and displaying partial mesh...")
-    val target: TriangleMesh = MeshIO.readMesh(new File("data/partials/VSD.Right_femur.XX.XX.OT.101151.0.stl")).get
+    val target: TriangleMesh = MeshIO.readMesh(new File("data/partials/VSD.Right_femur.XX.XX.OT.101148.0.stl")).get
     ui.show(target, "partialShape")
 
     println("Loading and displaying statistical shape model...")
@@ -41,7 +41,7 @@ object FitFemur {
     //val correctedPointIds = pointIds.filter{ id : PointId =>   (model.referenceMesh.point(id) - p).norm > 62}
 
     //Femur 2
-    //val correctedPointIds = pointIds.filter{ id : PointId =>   model.referenceMesh.point(id).x <50.7622 }
+    //val correctedPointIds = pointIds.filter{ id : PointId =>   model.referenceMesh.point(id).z <50.7622 }
 
     //Femur 4
     //val correctedPointIdsA = pointIds.filter { id: PointId => model.referenceMesh.point(id).z < -83.69}
@@ -50,7 +50,13 @@ object FitFemur {
     //val correctedPointIds = correctedPointIdsA.union(correctedPointIdsB)
 
     //Femur 5
-    val correctedPointIds = pointIds.filter { id: PointId => model.referenceMesh.point(id).z > -30.639 }
+    //val correctedPointIds = pointIds.filter { id: PointId => model.referenceMesh.point(id).z > -30.639 }
+
+    //Femur 6
+    val correctedPointIds = pointIds.filter { id: PointId =>  model.referenceMesh.point(id).z < -136 ||
+                                                              model.referenceMesh.point(id).z > 158 }
+
+
 
     ui.show(correctedPointIds.map { id => model.mean.point(id) }, "points")
 
