@@ -15,7 +15,7 @@ object SimpleICP {
   def main(args: Array[String]) {
 
     ////////////////////SETTINGS FOR ICP
-    val numIterations = 20
+    val numIterations = 100
     val noise = NDimensionalNormalDistribution(Vector(0, 0, 0), SquareMatrix((1f, 0, 0), (0, 1f, 0), (0, 0, 1f)))
 
     // required to initialize native libraries (VTK, HDF5 ..)

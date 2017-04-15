@@ -12,7 +12,7 @@ package object femur {
   def calcCorrespondentTransformationsICP(model: StatisticalMeshModel, target: TriangleMesh, noise:
   NDimensionalNormalDistribution[_3D], numIterations: Int): DiscreteVectorField[_3D, _3D] = {
 
-    val pointSamples = UniformMeshSampler3D(model.mean, 5000, 42).sample.map(s => s._1)
+    val pointSamples = UniformMeshSampler3D(model.mean, 7000, 42).sample.map(s => s._1)
     val pointIds = pointSamples.map { s => model.mean.findClosestPoint(s).id }
 
 
