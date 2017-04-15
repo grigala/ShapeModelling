@@ -25,7 +25,7 @@ object FitFemur {
     val ui = ScalismoUI()
 
     println("Loading and displaying partial mesh...")
-    val target: TriangleMesh = MeshIO.readMesh(new File("data/partials/VSD.Right_femur.XX.XX.OT.101147.0.stl")).get
+    val target: TriangleMesh = MeshIO.readMesh(new File("data/partials/VSD.Right_femur.XX.XX.OT.101148.0.stl")).get
     ui.show(target, "partialShape")
 
     println("Loading and displaying statistical shape model...")
@@ -35,7 +35,7 @@ object FitFemur {
 
     val pointSamples = UniformMeshSampler3D(model.mean, 5000, 42).sample.map(s => s._1)
     val pointIds = pointSamples.map { s => model.mean.findClosestPoint(s).id }
-    val p = new Point3D(-40.558f,26.1689f,-208.722f)
+    val p = Point3D(-40.558f, 26.1689f, -208.722f)
     val correctedPointIds = pointIds.filter{ id : PointId =>   (model.referenceMesh.point(id) - p).norm > 62}
     //ui.show(correctedPointIds.map{id => model.mean.point(id)}, "points")
 
@@ -68,6 +68,7 @@ object FitFemur {
     }
 
 
+    println("Performing fitting recursion and calculating correspondences...")
     val fittedModelPoints = recursion(correctedPointIds.map(id => model.mean.point(id)), numIterations)
     val targetPoints = attributeCorrespondences(fittedModelPoints)
     val refPoints = correctedPointIds.map(id => model.mean.point(id))

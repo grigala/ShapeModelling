@@ -22,7 +22,7 @@ object SimpleICP {
     scalismo.initialize()
 
     // create a visualization window
-    val ui = ScalismoUI()
+    //val ui = ScalismoUI()
 
     /////////////////////Load Files
     val files = new File("data/aligned/meshes/").listFiles().take(50)
@@ -47,7 +47,7 @@ object SimpleICP {
     val continuousFields = transformationFields.map(f => f.interpolateNearestNeighbor)
     val dataGP = DiscreteLowRankGaussianProcess.createUsingPCA(refFemur, continuousFields)
     val dataModel = StatisticalMeshModel(refFemur, dataGP.interpolateNearestNeighbor)
-    ui.show(dataModel, "dataShapeModel")
+    //ui.show(dataModel, "dataShapeModel")
 
     StatismoIO.writeStatismoMeshModel(dataModel, new File("data/data_shape_model.h5"))
 
@@ -66,6 +66,6 @@ object SimpleICP {
     ui.show(finalModel, "augmented model")
     //ui.show(transformationField, "deformations")
     */
-    print("done")
+    println("done")
   }
 }

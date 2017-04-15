@@ -10,7 +10,8 @@ import scalismo.geometry.Landmark
 
 object RigidAlignment {
 
-  def main(args: Array[String]) {
+  //def main(args: Array[String]) {
+  def rigidAlignment(): Unit = {
 
     scalismo.initialize()
 
@@ -47,6 +48,6 @@ object RigidAlignment {
     println("Start writing meshes at `data/aligned/meshes/`")
     (0 until 50).foreach { i: Int => MeshIO.writeSTL(alignedFemurs(i), new File("data/aligned/meshes/femur_" + i + ".stl")) }
 
-    print("All done")
+    println("All done")
   }
 }

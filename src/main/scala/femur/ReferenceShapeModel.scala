@@ -13,6 +13,7 @@ import scalismo.ui.api.SimpleAPI.ScalismoUI
 object ReferenceShapeModel {
 
   def main(args: Array[String]) {
+    RigidAlignment.rigidAlignment()
 
     // required to initialize native libraries (VTK, HDF5 ..)
     scalismo.initialize()
@@ -44,6 +45,6 @@ object ReferenceShapeModel {
     val model = StatisticalMeshModel(refFemur, lowRankGP)
     //ui.show(model, "model")
     StatismoIO.writeStatismoMeshModel(model, new File("data/reference_shape_model.h5"))
-    print("done")
+    println("done")
   }
 }
