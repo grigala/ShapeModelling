@@ -13,6 +13,8 @@
 \usepackage{listings}
 \usepackage[noend]{algpseudocode}
 \usetikzlibrary{automata, arrows}
+\usepackage{subcaption}
+\usepackage{hyperref}
 
 \makeatletter
 \def\BState{\State\hskip-\ALG@thistlm}
@@ -37,17 +39,14 @@
 \newcommand{\department}{Department of Mathematics and Computer Science}
 \newcommand{\address}{Spiegelgasse 1, 4051 Basel, Switzerland}
 \newcommand{\website}{dmi.unibas.ch / informatik.unibas.ch}
+
 %% Custom commands
 
 \def\underline#1{\underline{\underline{#1}}}
 
 \begin{document}
 	\begin{abstract}
-		In this project, we demonstrate a custom technique for reconstructing 3D femurs using the Scalable Image Analysis and Shape Modeling library Scalismo. We were given 50 sample femurs and 10 deformed femurs with missing parts which we reconstruct using our custom Statistical Shape Model [SSM] generated using various techniques from the training data. The main challenges in this project consist of building a SSM that models different femur shapes while avoiding non-femur-like ones. 
-		
-		Furthermore the reconstructed femurs should not only be exact but also a valid femur without unnatural deformations. 
-		
-		We show 3D femur reconstructions for single meshes. We also introduce a method for the reconstruction of shapes that does not rely on hand-picked landmarks.
+		In this project, we demonstrate a custom technique for reconstructing 3D femurs using the Scalable Image Analysis and Shape Modelling library Scalismo. We were given 50 sample femurs and 10 deformed femurs with missing parts which we reconstruct using our custom Statistical Shape Model [SSM] generated using various techniques from the training data. The main challenges in this project consist of building a SSM that models different femur shapes while avoiding non-femur-like ones. We also show a method for the reconstruction of incomplete 3D shapes that does not rely on hand-picked landmarks. 
 	\end{abstract}
 	
 	\section{Introduction}
@@ -55,6 +54,7 @@
 	Modelling of 3D shapes and the reconstruction of missing parts in 3D shapes pose a difficult problem. In this project our goal was reconstructing 10 femurs which were missing different parts. For a reconstruction it is mandatory that the fully reconstructed femur still is a valid femur in the sense that no unnatural deformations were introduced. We target this problem by using the Scalismo library for training a Statistical Shape Model, which can then be fitted onto the incomplete femurs for reconstructing the missing parts.
 	
 	We present both a method for building a SSM that models natural femurs as well as a method for reconstructing individual incomplete femurs with this SSM.
+	
 
 	\section{Method}
 	For the reconstruction of incomplete meshes we require a Statistical Shape Model [SSM] that models the variations of femurs appropriately. In our approach we use 50 available training femurs for creating a Shape Model that includes the variation of the data and augment it with a custom kernel for improving the smoothness.
@@ -62,51 +62,69 @@
 	There are multiple main steps necessary for this approach. First of all, we aligned the training meshes with a reference femur using rigid alignment. By doing this, we remove shape variations due to transformation or translation. We now want to create a SSM, which models the variation of this data relatively to our reference femur. For this, correspondence between each training femur and the reference femur is required. We achieve this correspondence by using an adaption of the Iterative Closest Point [ICP] algorithm. This adaption computes a posterior probability for a given Shape Model in each iteration with the candidate correspondences. The next set of candidate correspondences is then calculated by finding the closest points on the target relative to the posterior mean.
 	The Shape Model we used for this procedure was obtained by modeling transformations relative to our reference femur with an an-isomorphic kernel (1).
 	\begin{align}
-		k_\sigma(x, x') =
-			\begin{pmatrix}
-				exp(-\frac{||x-x'||^2}{\sigma^2})       & 0 & 0 \\
-				0      & exp(-\frac{||x-x'||^2}{\sigma^2}) & 0  \\
-				0	   & 0 & exp(-\frac{||x-x'||^2}{\sigma^2})
-			\end{pmatrix}
+	k(x, x') =
+	\begin{pmatrix}
+	10 exp(-\frac{||x-x'||^2}{\sigma^2})       & 0 & 0 \\
+	0      & 10 exp(-\frac{||x-x'||^2}{\sigma^2}) & 0  \\
+	0      & 0 &  200 exp(-\frac{||x-x'||^2}{\sigma^2})
+	\end{pmatrix}
+	\quad \sigma^2 = 100
 	\end{align}
 	
 	The points for the reference femur were obtained by uniform sampling of 7000 points. In the final setting, 100 iterations steps were used for the ICP. With the correspondences available through the ICP algorithm, we can calculate a sample covariance matrix that includes the variation of our data. We can gather the directions in which the data varies the most by using the Principal Component Analysis (PCA). With the principal components available, our SSM that models the data is defined. For a smoother model we further augmented this SSM with an an-isomorphic kernel (2), which leads to our final SSM.
 	\begin{align}
 	k(x, x') =
 	\begin{pmatrix}
-	s_1 exp(-\frac{||x-x'||^2}{\sigma^2})       & 0 & 0 \\
-	0      & s_2 exp(-\frac{||x-x'||^2}{\sigma^2}) & 0  \\
-	0      & 0 &  s_3 exp(-\frac{||x-x'||^2}{\sigma^2})
+	10 exp(-\frac{||x-x'||^2}{\sigma^2})       & 0 & 0 \\
+	0      & 10 exp(-\frac{||x-x'||^2}{\sigma^2}) & 0  \\
+	0      & 0 &  10 exp(-\frac{||x-x'||^2}{\sigma^2})
 	\end{pmatrix}
+	\quad \sigma^2 = 30
 	\end{align}
 	
 	The reconstruction of partial femur meshes was done by sampling reference points on the mean of our SSM and then using ICP for finding corresponding points on the target shape. \\
+	\begin{figure}
+		\begin{subfigure}{.5\textwidth}
+		\centering
+		\includegraphics[width=7.3cm]{1.jpg}
+		\caption{Uniformly sampled points on the mean of the SSM}
+	\end{subfigure}	
+	\begin{subfigure}{.5\textwidth}
+		\centering
+		 \includegraphics[width=7.3cm]{2.jpg}
+		\caption{Filter applied on the sampled points}
+	\end{subfigure}	
+	\label{1}
+	\end{figure}
+
 	
-	\includegraphics[width=7.3cm]{1.jpg} \includegraphics[width=7.3cm]{2.jpg}
-	
-	Figure 1. Filter applied on the sampled points.\\
 	
 	The regression that is done in each iteration finally leads to the reconstructed femur. But as some of the corresponding points do not exist on the partial femur bone it is necessary to discard that can’t be mapped anywhere on the partial femur. This was done by designing individual filters for each partial femur. 
+	Our main approach was defining possible ranges for the z values and removing points that are in a certain radius around a selected point in the 3D space. \autoref{1} shows the resulting landmarks for applying this method on the first femur. For the third femur we approximated the cutoff plane and discarded all points that are on the wrong side of this plane (see \autoref{2}).\\
 	
-	The main approach was defining possible ranges for the z values and removing points that are in a certain radius around a selected point in the 3D space. Figure 1 shows the resulting landmarks for applying this method on the first femur. For the third femur we approximated the cutoff plane and discarded all points that are on the wrong side of this plane (see Figure 2).\\
+	\begin{figure}
+	\centering
+	\includegraphics[width=10cm]{4.png}
+	 \caption{ a) The cutoff can be best explained by a plane b) Sampled points on the mean shape after filtering using the estimated plane.}
+	 \label{2}
+	\end{figure}
 	
-	\includegraphics[width=14cm]{4.png}
 	
-	Figure 2. a) The cutoff can be best explained by a plane b) Correspondence points on the mean shape after filtering using the estimated plane. 
 
 
 
 	
 	\section{Results \& Discussions}
 	
-	In Figure 3 the average distance and the Hausdorff distance to the groundtruth of the missing part are listed. For the most part we received good reconstructions. The seventh and tenth partial femur stand out with a relatively high hausdorff distance. A more accurate selection of landmarks may be necessary for a satisfying result. 
-	
-	For the different reconstructions we used both the augmented SSM as well as the SSM which was purely learned from the data. In terms of the average and hausdorff distance we could not determine which one of the model is better in general. But the augmented model is less prone to unusual deformations and results in smoother shapes.
-	
-	\includegraphics[width=15cm]{3.png}
-	
-	Figure 3. Reconstruction results\\
-	
+	In \autoref{3} the average distance and the Hausdorff distance to the groundtruth of the missing part are listed. For the most part we received good reconstructions. The seventh and tenth partial femur stand out with a relatively high hausdorff distance. A more accurate selection of landmarks may be necessary for a satisfying result. 
+	For the different reconstructions we used both the augmented SSM as well as the SSM which was purely learned from the data. In terms of the average and Hausdorff distance we could not determine which one of the model is better in general. But the augmented model is less prone to unusual deformations and results in smoother shapes.
+	\begin{figure}
+		\centering
+		\includegraphics[width=15cm]{3.png}
+		\caption{Reconstruction results}
+		\label{3}
+	\end{figure}
+
 	Improvement of our methods could be achieved at three different steps of the reconstruction procedure. First of all, we could improve the SSM by using more elaborate methods for finding correspondence between the training femurs. Instead of initializing the ICP with the closest points to the sampled point, the provided landmarks could be used for the first regression. Aside from that, different algorithms than the ICP (e.g. gradient based approaches) may further improve the correspondence. Secondly, the data trained model can be further augmented with customly created kernels. At last, the reconstruction itself may benefit from additional use of manually selected landmarks for the ICP. 
 	
 
