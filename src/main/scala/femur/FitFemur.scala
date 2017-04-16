@@ -14,12 +14,11 @@ import scalismo.ui.api.SimpleAPI.ScalismoUI
 object FitFemur {
 
   def main(args: Array[String]) {
-
-    val reconstructFemurNo = 1
-
+    ///// Select femur which is to be reconstructed with this variable /////
+    val reconstructFemurNo = 4
+    ////////////////////////////////////////////////////////////////////////
 
     scalismo.initialize()
-
     ////////////////////SETTINGS FOR ICP
     val numIterations = 50
     val noise = NDimensionalNormalDistribution(Vector(0, 0, 0), SquareMatrix((1f, 0, 0), (0, 1f, 0), (0, 0, 1f)))
