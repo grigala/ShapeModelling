@@ -88,19 +88,21 @@
 		\centering
 		\includegraphics[width=7.3cm]{1.jpg}
 		\caption{Uniformly sampled points on the mean of the SSM}
+		
+		\label{1.1}
 	\end{subfigure}	
 	\begin{subfigure}{.5\textwidth}
 		\centering
 		 \includegraphics[width=7.3cm]{2.jpg}
 		\caption{Filter applied on the sampled points}
+		\label{1.2}
 	\end{subfigure}	
-	\label{1}
 	\end{figure}
 
 	
 	
 	The regression that is done in each iteration finally leads to the reconstructed femur. But as some of the corresponding points do not exist on the partial femur bone it is necessary to discard that can’t be mapped anywhere on the partial femur. This was done by designing individual filters for each partial femur. 
-	Our main approach was defining possible ranges for the z values and removing points that are in a certain radius around a selected point in the 3D space. \autoref{1} shows the resulting landmarks for applying this method on the first femur. For the third femur we approximated the cutoff plane and discarded all points that are on the wrong side of this plane (see \autoref{2}).\\
+	Our main approach was defining possible ranges for the z values and removing points that are in a certain radius around a selected point in the 3D space. \autoref{1.1} and \autoref{1.2} show the resulting landmarks for applying this method on the first femur. For the third femur we approximated the cutoff plane and discarded all points that are on the wrong side of this plane (see \autoref{2}).\\
 	
 	\begin{figure}
 	\centering
