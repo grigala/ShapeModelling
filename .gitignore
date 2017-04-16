@@ -85,3 +85,5 @@ fabric.properties
 /data/SMIR
 /data/aligned
 *.h5
+/data/partials/fit/
+/data/partials/fitted/
