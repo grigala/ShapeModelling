@@ -10,9 +10,10 @@ resolvers ++= Seq(
   "shapemodelling unibas" at "http://shapemodelling.cs.unibas.ch/repository/public"
 )
 
-libraryDependencies ++=
-Seq(
+libraryDependencies ++= Seq(
   "ch.unibas.cs.gravis" %% "scalismo" % "0.10.+",
-  "ch.unibas.cs.gravis" % "scalismo-native-all" % "3.0.+",
-  "ch.unibas.cs.gravis" %% "scalismo-ui" % "0.6.2"
+  "ch.unibas.cs.gravis" %% "scalismo-ui" % "0.6.+",
+  "ch.unibas.cs.gravis" % "scalismo-sampling_2.11" % "develop-SNAPSHOT"
 )
+
+dependencyOverrides += "ch.unibas.cs.gravis" % "scalismo-native-all" % "3.1.1"
