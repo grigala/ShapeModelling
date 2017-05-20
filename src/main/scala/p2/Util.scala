@@ -1,42 +1,17 @@
 package p2
 
-import java.io.File
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.common.PointId
 import scalismo.geometry.{Point, SquareMatrix, Vector3D, _3D}
-import scalismo.io.{LandmarkIO, MeshIO, StatismoIO}
 import scalismo.sampling.{DistributionEvaluator, ProposalGenerator, SymmetricTransition, TransitionProbability}
 import scalismo.statisticalmodel.{MultivariateNormalDistribution, NDimensionalNormalDistribution, StatisticalMeshModel}
-import scalismo.ui.api.SimpleAPI.ScalismoUI
 
 /**
   * Porting 15th tutorial Code as a helper class
   *
   * Created by George on 19/5/2017.
   */
-
-//object Util {
-//  scalismo.initialize()
-//  val ui = ScalismoUI()
-//
-//  val model = StatismoIO.readStatismoMeshModel(new File("datasets/bfm.h5")).get
-//  val target = MeshIO.readMesh(new File("datasets/target.stl")).get
-//
-//  ui.show(target, "target")
-//  ui.show(model, "model")
-//
-//  val modelLms = LandmarkIO.readLandmarksJson[_3D](new File("datasets/modelLM_mcmc.json")).get
-//  ui.addLandmarksTo(modelLms, "model")
-//
-//  val targetLms = LandmarkIO.readLandmarksJson[_3D](new File("datasets/targetLM_mcmc.json")).get
-//  ui.addLandmarksTo(targetLms, "target")
-//
-//  val modelLmIds =  modelLms.map(l => model.mean.pointId(l.point).get)
-//  val targetPoints = targetLms.map(l => l.point)
-//
-//  val correspondences = modelLmIds.zip(targetPoints)
-//}
 
 case class ShapeParameters(modelCoefficients: DenseVector[Float])
 

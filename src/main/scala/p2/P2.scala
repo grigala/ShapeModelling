@@ -30,18 +30,21 @@ object P2 {
   // Target mesh we are willing to segmentate ?which? target.stl?
   val target: TriangleMesh = MeshIO.readMesh(new File("datasets/.stl")).get
 
-  val modelLandmarks: immutable.Seq[Landmark[_3D]] = LandmarkIO.readLandmarksJson[_3D](new File("datasets/")).get
-  val targetLandmarks: immutable.Seq[Landmark[_3D]] = LandmarkIO.readLandmarksJson[_3D](new File("datasets/")).get
+  val modelLandmarks: immutable.Seq[Landmark[_3D]] = LandmarkIO.readLandmarksJson[_3D](new File("datasets/.json")).get
+  val targetLandmarks: immutable.Seq[Landmark[_3D]] = LandmarkIO.readLandmarksJson[_3D](new File("datasets/.json")).get
 
   ui.show(target, "target")
   ui.show(model, "model")
   ui.addLandmarksTo(modelLandmarks, "model")
   ui.addLandmarksTo(targetLandmarks, "target")
 
-  val modelLandmkarIds: immutable.Seq[PointId] = modelLandmarks.map(l => model.mean.pointId(l.point).get)
+  val modelLandmarkIds: immutable.Seq[PointId] = modelLandmarks.map(l => model.mean.pointId(l.point).get)
   val targetPoints: immutable.Seq[Point[_3D]] = targetLandmarks.map(l => l.point)
-  val correspondences: immutable.Seq[(PointId, Point[_3D])] = modelLandmkarIds.zip(targetPoints)
+  val correspondences: immutable.Seq[(PointId, Point[_3D])] = modelLandmarkIds.zip(targetPoints)
 
+  /**
+    * @see Util.scala for detailed information about classes used bellow
+    */
   val generator = GaussianProposal(model.rank, 0.1f)
   val likelihoodEvaluator = CorrespondenceEvaluator(model, correspondences, 0.1f)
   val priorEvaluator = ShapePriorEvaluator(model)
