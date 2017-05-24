@@ -2,9 +2,9 @@ package p2
 
 
 import breeze.linalg.{DenseMatrix, DenseVector}
-import scalismo.common.PointId
 import scalismo.geometry.{Point, SquareMatrix, Vector3D, _3D}
 import scalismo.sampling.{DistributionEvaluator, ProposalGenerator, SymmetricTransition, TransitionProbability}
+import scalismo.statisticalmodel.asm.ActiveShapeModel
 import scalismo.statisticalmodel.{MultivariateNormalDistribution, NDimensionalNormalDistribution, StatisticalMeshModel}
 
 /**
@@ -36,27 +36,35 @@ case class GaussianProposal(paramVectorSize: Int, stdev: Float) extends
   }
 }
 
-case class ShapePriorEvaluator(model: StatisticalMeshModel) extends DistributionEvaluator[ShapeParameters] {
+/**
+  * Prior probability
+  *
+  * @param model ActiveShapeModel
+  */
+case class ShapePriorEvaluator(model: ActiveShapeModel) extends DistributionEvaluator[ShapeParameters] {
   override def logValue(theta: ShapeParameters): Double = {
-    model.gp.logpdf(theta.modelCoefficients)
+    model.statisticalModel.gp.logpdf(theta.modelCoefficients)
   }
 }
 
-case class CorrespondenceEvaluator(model: StatisticalMeshModel, correspondences: Seq[(PointId, Point[_3D])],
-                                   tolerance: Double) extends DistributionEvaluator[ShapeParameters] {
-
-  val uncertainty = NDimensionalNormalDistribution(Vector3D(0f, 0f, 0f), SquareMatrix.eye[_3D] * tolerance)
+/**
+  * Computes Likelihood of intensities
+  *
+  * @param model ActiveShapeModel
+  */
+case class CorrespondenceEvaluator(model: ActiveShapeModel) extends DistributionEvaluator[ShapeParameters] {
 
   override def logValue(theta: ShapeParameters): Double = {
 
-    val currModelInstance = model.instance(theta.modelCoefficients)
-    val likelihoods = correspondences.map { case (id, targetPoint) =>
-      val modelInstancePoint = currModelInstance.point(id)
-      val observedDeformation = targetPoint - modelInstancePoint
+    val currModelInstance = model.statisticalModel.instance(theta.modelCoefficients)
+    val ids = model.profiles.ids
 
-      uncertainty.logpdf(observedDeformation)
+    val likelihoods = for (id <- ids) yield {
+      val profile = model.profiles(id)
+      val profilePointOnMesh = currModelInstance.point(profile.pointId)
+      val featureAtPoint = model.featureExtractor(preProcessedGradientImage1, profilePointOnMesh, currModelInstance, profile.pointId).get
+      profile.distribution.logpdf(featureAtPoint)
     }
-
     val loglikelihood = likelihoods.sum
     loglikelihood
   }

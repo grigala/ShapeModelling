@@ -1,3 +1,8 @@
+import java.io.File
+
+import scalismo.geometry._3D
+import scalismo.image.DiscreteScalarImage
+import scalismo.io.{ActiveShapeModelIO, ImageIO}
 import scalismo.mesh.TriangleMesh
 import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
 
@@ -25,6 +30,11 @@ import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
   * SOFTWARE.
   **/
 package object p2 {
+  val asm: ActiveShapeModel = ActiveShapeModelIO.readActiveShapeModel(new File("handedData/femur-asm.h5")).get
+  val image1: DiscreteScalarImage[_3D, Float] = ImageIO.read3DScalarImage[Short](new File("handedData/targets/1.nii")).get.map(_.toFloat)
+  val preProcessedGradientImage1: PreprocessedImage = asm.preprocessor(image1)
+
+
   def likelihoodForMesh(asm: ActiveShapeModel, mesh: TriangleMesh, preprocessedImage: PreprocessedImage): Double = {
 
     val ids = asm.profiles.ids
