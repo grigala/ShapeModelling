@@ -13,6 +13,7 @@ import scalismo.statisticalmodel.{MultivariateNormalDistribution, NDimensionalNo
   * Created by George on 19/5/2017.
   */
 
+
 case class ShapeParameters(modelCoefficients: DenseVector[Float])
 
 case class GaussianProposal(paramVectorSize: Int, stdev: Float) extends

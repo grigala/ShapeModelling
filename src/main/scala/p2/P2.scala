@@ -4,11 +4,12 @@ import java.io.File
 
 import scalismo.common.PointId
 import scalismo.geometry.{Landmark, Point, _3D}
-import scalismo.io.{LandmarkIO, MeshIO, StatismoIO}
+import scalismo.io._
 import scalismo.mesh.TriangleMesh
 import scalismo.sampling.algorithms.MetropolisHastings
 import scalismo.sampling.evaluators.ProductEvaluator
 import scalismo.statisticalmodel.StatisticalMeshModel
+import scalismo.statisticalmodel.asm.ActiveShapeModel
 import scalismo.ui.api.SimpleAPI.ScalismoUI
 
 import scala.collection.immutable
@@ -21,34 +22,26 @@ import scala.collection.immutable
   */
 object P2 {
 
-  scalismo.initialize()
+  def main(args: Array[String]) {
+    scalismo.initialize()
 
-  val ui = ScalismoUI()
+    val ui = ScalismoUI()
 
-  // Statistical mesh model ?which?
-  val model: StatisticalMeshModel = StatismoIO.readStatismoMeshModel(new File("datasets/.h5")).get
-  // Target mesh we are willing to segmentate ?which? target.stl?
-  val target: TriangleMesh = MeshIO.readMesh(new File("datasets/.stl")).get
+    val asm: ActiveShapeModel = ActiveShapeModelIO.readActiveShapeModel(new File("handedData/femur-asm.h5")).get
+    val image1 = ImageIO.read3DScalarImage[Short](new File("handedData/targets/1.nii")).get.map(_.toFloat)
 
-  val modelLandmarks: immutable.Seq[Landmark[_3D]] = LandmarkIO.readLandmarksJson[_3D](new File("datasets/.json")).get
-  val targetLandmarks: immutable.Seq[Landmark[_3D]] = LandmarkIO.readLandmarksJson[_3D](new File("datasets/.json")).get
+    ui.show(asm.statisticalModel, "shapeModel")
+    ui.show(asm.mean, "mean_intensities")
 
-  ui.show(target, "target")
-  ui.show(model, "model")
-  ui.addLandmarksTo(modelLandmarks, "model")
-  ui.addLandmarksTo(targetLandmarks, "target")
+    ui.show(image1, "image1")
 
-  val modelLandmarkIds: immutable.Seq[PointId] = modelLandmarks.map(l => model.mean.pointId(l.point).get)
-  val targetPoints: immutable.Seq[Point[_3D]] = targetLandmarks.map(l => l.point)
-  val correspondences: immutable.Seq[(PointId, Point[_3D])] = modelLandmarkIds.zip(targetPoints)
+    val preProcessedGradientImage = asm.preprocessor(image1)
 
-  /**
-    * @see Util.scala for detailed information about classes used bellow
-    */
-  val generator = GaussianProposal(model.rank, 0.1f)
-  val likelihoodEvaluator = CorrespondenceEvaluator(model, correspondences, 0.1f)
-  val priorEvaluator = ShapePriorEvaluator(model)
-  val posteriorEvaluator = ProductEvaluator(priorEvaluator, likelihoodEvaluator)
-  val chan = MetropolisHastings(generator, posteriorEvaluator)
+    val test1 = MeshIO.readMesh(new File("handedData/test/4.stl")).get
+    ui.show(test1, "test_mesh")
+    println("calculating likelihood value")
+    println(likelihoodForMesh(asm, asm.statisticalModel.sample, preProcessedGradientImage))
+  }
+
 
 }
