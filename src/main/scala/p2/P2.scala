@@ -4,12 +4,15 @@ import java.io.File
 
 import breeze.linalg.DenseVector
 import scalismo.io._
-import scalismo.sampling.algorithms.MetropolisHastings
-import scalismo.sampling.evaluators.ProductEvaluator
-import scalismo.sampling.loggers.AcceptRejectLogger
-import scalismo.sampling.{DistributionEvaluator, ProposalGenerator}
-import scalismo.statisticalmodel.asm.ActiveShapeModel
+import scalismo.sampling.algorithms._
+import scalismo.sampling.evaluators._
+import scalismo.sampling.loggers._
+import scalismo.sampling.proposals._
+import scalismo.sampling._
+
+import scalismo.statisticalmodel.asm._
 import scalismo.ui.api.SimpleAPI.ScalismoUI
+import scala.util.Random
 
 /**
   * Main working class for second project, that is a model-based segmentation
@@ -47,6 +50,7 @@ object P2 {
     val priorEvaluator = ShapePriorEvaluator(asm)
     val posteriorEvaluator = ProductEvaluator(priorEvaluator, likelihoodEvaluator)
     //TODO Error:(50, 35) could not find implicit value for parameter random: scala.util.Random
+    implicit val random = new Random()
     val chain = MetropolisHastings(generator, posteriorEvaluator /*, logger*/)
 
     val initialParameters = ShapeParameters(DenseVector.zeros[Float](asm.statisticalModel.rank))
@@ -57,7 +61,7 @@ object P2 {
       ui.setCoefficientsOf("asm", theta.modelCoefficients)
       theta
     }
-
+    val samples = samplingIterator.drop(100).take(50)
 
     println("Done.")
   }
