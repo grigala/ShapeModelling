@@ -26,22 +26,25 @@ object P2 {
 
   def main(args: Array[String]) {
     scalismo.initialize()
-    val visualize = true
 
 
-
-    val reconstructFemurNo = 1
+    val reconstructFemurNo = 8
 
     val targetName: String = reconstructFemurNo match {
+      //test with groundtruth
       case 1 => "handedData/test/4"
       case 2 => "handedData/test/14"
       case 3 => "handedData/test/23"
       case 4 => "handedData/test/25"
       case 5 => "handedData/test/30"
+      //targets with no groundtruth
+      case 6 => "handedData/targets/1"
+      case 7 => "handedData/targets/9"
+      case 8 => "handedData/targets/10"
+      case 9 => "handedData/targets/13"
+      case 10 => "handedData/targets/37"
     }
 
-
-    val target: TriangleMesh = MeshIO.readMesh(new File(targetName+".stl")).get
 
     val asm: ActiveShapeModel = ActiveShapeModelIO.readActiveShapeModel(new File("handedData/femur-asm.h5")).get
     val image = ImageIO.read3DScalarImage[Short](new File(targetName+".nii")).get.map(_.toFloat)
@@ -50,26 +53,22 @@ object P2 {
 
 
     println("Defining the Markov chain...")
-    implicit val random = new Random(1)
+    implicit val random = scala.util.Random
 
-    val lowVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.001f)
-    val verylowVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.01f)
     val largeVarianceGenerator =  GaussianProposal(asm.statisticalModel.rank, 0.2f)
+    val lowVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.01f)
+    val verylowVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.001f)
+    val verylowVarianceGenerator2 = GaussianProposal(asm.statisticalModel.rank, 0.05f)
 
-    val lowScaleGenerator = ScaleProposal(0.1f)
-    val midScaleGenerator = ScaleProposal(0.2f)
-    val highScaleGenerator = ScaleProposal(0.5f)
-    val randomWalkGenerator = MixtureProposal.fromProposalsWithTransition((0.8, lowVarianceGenerator),(0.05,
-      largeVarianceGenerator), (0.15, verylowVarianceGenerator))
-    val scaleGenerator = MixtureProposal.fromProposalsWithTransition((0.8, lowScaleGenerator), (0.1,
-      midScaleGenerator), (0.1, highScaleGenerator))
 
-    val mixtureGenerator = MixtureProposal.fromProposalsWithTransition((0.7, randomWalkGenerator), (0.3,
-      scaleGenerator))
+    val randomWalkGenerator = MixtureProposal.fromSymmetricProposalsWithTransition((0.4, lowVarianceGenerator),(0.2,
+      largeVarianceGenerator), (0.2, verylowVarianceGenerator), (0.2, verylowVarianceGenerator2))
+
 
     val likelihoodEvaluator = CorrespondenceEvaluator(asm, preProcessedGradientImage)
     val priorEvaluator = ShapePriorEvaluator(asm)
     val posteriorEvaluator = ProductEvaluator(priorEvaluator, likelihoodEvaluator)
+
 
     val chain = MetropolisHastings(randomWalkGenerator, posteriorEvaluator , logger)
 
@@ -85,25 +84,30 @@ object P2 {
     }
     val time1 = System.currentTimeMillis()
 
-    val samples = samplingIterator.drop(200).take(500)
+    val samples = samplingIterator.take(10000)
 
     val bestSample = samples.maxBy(posteriorEvaluator.logValue)
-    if(visualize){
-      val ui = ScalismoUI()
-      ui.show(target, "groundtruthFemur")
-      ui.show(asm.statisticalModel, "model")
-      //ui.show(preProcessedGradientImage, "image")
-      ui.setCoefficientsOf("model", bestSample.modelCoefficients)
-    }
-    val bestModel = asm.statisticalModel.instance(bestSample.modelCoefficients)
-    val diff = bestModel.pointIds.map{
-      id : PointId => (target.point(id) - bestModel.point(id)).norm
-     }.sum
 
+
+    val bestModel = asm.statisticalModel.instance(bestSample.modelCoefficients)
     println("Done.")
+
+
+    val ui = ScalismoUI()
+    ui.show(asm.statisticalModel, "model")
+    //ui.show(preProcessedGradientImage, "image")
+    ui.setCoefficientsOf("model", bestSample.modelCoefficients)
+
     println(s"#Accepted: ${countAccepted.toString} #Rejected: ${countRejected.toString}")
     println(bestSample.modelCoefficients)
-    println(s"Diff: ${diff}")
+    if(reconstructFemurNo<=5){
+      val target: TriangleMesh = MeshIO.readMesh(new File(targetName+".stl")).get
+      ui.show(target, "groundtruthFemur")
+      val diff = bestModel.pointIds.map{
+        id : PointId => (target.point(id) - bestModel.point(id)).norm
+      }.sum
+      println(s"Diff: ${diff}")
+    }
     println(s"Time needed: ${System.currentTimeMillis() - time1}")
 
   }
