@@ -23,9 +23,6 @@ case class GaussianProposal(paramVectorSize: Int, stdev: Float) extends
   val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
     DenseMatrix.eye[Float](paramVectorSize) * stdev)
 
-  val scaleDistr = new MultivariateNormalDistribution(DenseVector.zeros(1),
-    DenseMatrix.eye[Float](1) * stdev)
-
   override def propose(theta: ShapeParameters): ShapeParameters = {
     val perturbation = perturbationDistr.sample()
     val thetaPrime = ShapeParameters(theta.modelCoefficients + perturbation)
@@ -40,9 +37,9 @@ case class GaussianProposal(paramVectorSize: Int, stdev: Float) extends
 }
 
 case class ScaleProposal(stdev: Float) extends
-  ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] {
+  ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters]{
 
-  val scaleDistr = new MultivariateNormalDistribution(DenseVector.zeros(1),
+  val scaleDistr = new MultivariateNormalDistribution(DenseVector.ones(1),
     DenseMatrix.eye[Float](1) * stdev)
 
   override def propose(theta: ShapeParameters): ShapeParameters = {
@@ -53,8 +50,12 @@ case class ScaleProposal(stdev: Float) extends
 
 
   override def logTransitionProbability(from: ShapeParameters, to: ShapeParameters) = {
-    val residual = to.modelCoefficients - from.modelCoefficients
-    scaleDistr.logpdf(residual.slice(1,2))
+    val quotient = to.modelCoefficients.valueAt(0) / from.modelCoefficients.valueAt(0)
+    if(!quotient.toDouble.isNaN){
+      scaleDistr.logpdf(DenseVector.fill(1,quotient))
+    }else{
+      -breeze.numerics.inf
+    }
   }
 }
 
