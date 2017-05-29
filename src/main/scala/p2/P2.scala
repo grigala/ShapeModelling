@@ -12,8 +12,6 @@ import scalismo.sampling.proposals._
 import scalismo.statisticalmodel.asm._
 import scalismo.ui.api.SimpleAPI.ScalismoUI
 
-import scala.util.Random
-
 /**
   * Main working class for second project, that is a model-based segmentation
   * of 5 CT femur images using MCMC methods and Active Shape Models.
@@ -45,7 +43,7 @@ object P2 {
 
 
     val asm: ActiveShapeModel = ActiveShapeModelIO.readActiveShapeModel(new File("handedData/femur-asm.h5")).get
-    val image = ImageIO.read3DScalarImage[Short](new File(targetName+".nii")).get.map(_.toFloat)
+    val image = ImageIO.read3DScalarImage[Short](new File(targetName + ".nii")).get.map(_.toFloat)
 
     val preProcessedGradientImage: PreprocessedImage = asm.preprocessor(image)
 
@@ -53,13 +51,13 @@ object P2 {
     println("Defining the Markov chain...")
     implicit val random = scala.util.Random
 
-    val largeVarianceGenerator =  GaussianProposal(asm.statisticalModel.rank, 0.2f)
+    val largeVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.2f)
     val lowVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.01f)
     val verylowVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.001f)
     val verylowVarianceGenerator2 = GaussianProposal(asm.statisticalModel.rank, 0.05f)
 
 
-    val randomWalkGenerator = MixtureProposal.fromSymmetricProposalsWithTransition((0.4, lowVarianceGenerator),(0.2,
+    val randomWalkGenerator = MixtureProposal.fromSymmetricProposalsWithTransition((0.4, lowVarianceGenerator), (0.2,
       largeVarianceGenerator), (0.2, verylowVarianceGenerator), (0.2, verylowVarianceGenerator2))
 
 
@@ -68,7 +66,7 @@ object P2 {
     val posteriorEvaluator = ProductEvaluator(priorEvaluator, likelihoodEvaluator)
 
 
-    val chain = MetropolisHastings(randomWalkGenerator, posteriorEvaluator , logger)
+    val chain = MetropolisHastings(randomWalkGenerator, posteriorEvaluator, logger)
 
     val initialParameters = ShapeParameters(DenseVector.zeros[Float](asm.statisticalModel.rank))
     //val initialParameters = ShapeParameters(asm.statisticalModel.coefficients(asm.statisticalModel.mean))
@@ -82,7 +80,7 @@ object P2 {
     }
     val time1 = System.currentTimeMillis()
 
-    val samples = samplingIterator.take(10000)
+    val samples = samplingIterator.take(1000)
 
     val bestSample = samples.maxBy(posteriorEvaluator.logValue)
 
@@ -98,11 +96,11 @@ object P2 {
 
     println(s"#Accepted: ${countAccepted.toString} #Rejected: ${countRejected.toString}")
     println(bestSample.modelCoefficients)
-    if(reconstructFemurNo<=5){
-      val target: TriangleMesh = MeshIO.readMesh(new File(targetName+".stl")).get
+    if (reconstructFemurNo <= 5) {
+      val target: TriangleMesh = MeshIO.readMesh(new File(targetName + ".stl")).get
       ui.show(target, "groundtruthFemur")
-      val diff = bestModel.pointIds.map{
-        id : PointId => (target.point(id) - bestModel.point(id)).norm
+      val diff = bestModel.pointIds.map {
+        id: PointId => (target.point(id) - bestModel.point(id)).norm
       }.sum
       println(s"Diff: ${diff}")
     }
