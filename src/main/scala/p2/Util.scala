@@ -1,10 +1,11 @@
 package p2
 
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg.{DenseMatrix, DenseVector, diag}
+import breeze.stats.distributions.Gaussian
 import scalismo.geometry.{Point, SquareMatrix, Vector3D, _3D}
 import scalismo.sampling.{DistributionEvaluator, ProposalGenerator, SymmetricTransition, TransitionProbability}
-import scalismo.statisticalmodel.asm.ActiveShapeModel
+import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
 import scalismo.statisticalmodel.{MultivariateNormalDistribution, NDimensionalNormalDistribution, StatisticalMeshModel}
 
 /**
@@ -22,6 +23,8 @@ case class GaussianProposal(paramVectorSize: Int, stdev: Float) extends
   val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
     DenseMatrix.eye[Float](paramVectorSize) * stdev)
 
+  val scaleDistr = new MultivariateNormalDistribution(DenseVector.zeros(1),
+    DenseMatrix.eye[Float](1) * stdev)
 
   override def propose(theta: ShapeParameters): ShapeParameters = {
     val perturbation = perturbationDistr.sample()
@@ -33,6 +36,25 @@ case class GaussianProposal(paramVectorSize: Int, stdev: Float) extends
   override def logTransitionProbability(from: ShapeParameters, to: ShapeParameters) = {
     val residual = to.modelCoefficients - from.modelCoefficients
     perturbationDistr.logpdf(residual)
+  }
+}
+
+case class ScaleProposal(stdev: Float) extends
+  ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] {
+
+  val scaleDistr = new MultivariateNormalDistribution(DenseVector.zeros(1),
+    DenseMatrix.eye[Float](1) * stdev)
+
+  override def propose(theta: ShapeParameters): ShapeParameters = {
+    val scale = scaleDistr.sample()
+    val thetaPrime = ShapeParameters(theta.modelCoefficients * scale.valueAt(0))
+    thetaPrime
+  }
+
+
+  override def logTransitionProbability(from: ShapeParameters, to: ShapeParameters) = {
+    val residual = to.modelCoefficients - from.modelCoefficients
+    scaleDistr.logpdf(residual.slice(1,2))
   }
 }
 
@@ -52,7 +74,8 @@ case class ShapePriorEvaluator(model: ActiveShapeModel) extends DistributionEval
   *
   * @param model ActiveShapeModel
   */
-case class CorrespondenceEvaluator(model: ActiveShapeModel) extends DistributionEvaluator[ShapeParameters] {
+case class CorrespondenceEvaluator(model: ActiveShapeModel, preprocessedGradientImage : PreprocessedImage) extends
+  DistributionEvaluator[ShapeParameters] {
 
   override def logValue(theta: ShapeParameters): Double = {
 
@@ -62,7 +85,7 @@ case class CorrespondenceEvaluator(model: ActiveShapeModel) extends Distribution
     val likelihoods = for (id <- ids) yield {
       val profile = model.profiles(id)
       val profilePointOnMesh = currModelInstance.point(profile.pointId)
-      val featureAtPoint = model.featureExtractor(preProcessedGradientImage1, profilePointOnMesh, currModelInstance, profile.pointId).get
+      val featureAtPoint = model.featureExtractor(preprocessedGradientImage, profilePointOnMesh, currModelInstance, profile.pointId).get
       profile.distribution.logpdf(featureAtPoint)
     }
     val loglikelihood = likelihoods.sum
@@ -90,57 +113,4 @@ case class ProximityEvaluator(model: StatisticalMeshModel, targetLandmarks: Seq[
   }
 }
 
-case class PoseAndShapeParameters(rotationParameters: DenseVector[Float], translationParameters: DenseVector[Float], modelCoefficients: DenseVector[Float])
 
-
-case class ShapeUpdateProposal(paramVectorSize: Int, stdev: Float) extends
-  ProposalGenerator[PoseAndShapeParameters] with TransitionProbability[PoseAndShapeParameters] with SymmetricTransition[PoseAndShapeParameters] {
-
-  val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(paramVectorSize),
-    DenseMatrix.eye[Float](paramVectorSize) * stdev)
-
-
-  override def propose(theta: PoseAndShapeParameters): PoseAndShapeParameters = {
-    val perturbation = perturbationDistr.sample()
-    val thetaPrime = PoseAndShapeParameters(theta.rotationParameters, theta.translationParameters, theta.modelCoefficients + perturbationDistr.sample)
-    thetaPrime
-  }
-
-  override def logTransitionProbability(from: PoseAndShapeParameters, to: PoseAndShapeParameters) = {
-    val residual = to.modelCoefficients - from.modelCoefficients
-    perturbationDistr.logpdf(residual)
-  }
-
-}
-
-case class RotationUpdateProposal(stdev: Float) extends
-  ProposalGenerator[PoseAndShapeParameters] with TransitionProbability[PoseAndShapeParameters] with SymmetricTransition[PoseAndShapeParameters] {
-
-  val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(3),
-    DenseMatrix.eye[Float](3) * stdev)
-
-  def propose(theta: PoseAndShapeParameters): PoseAndShapeParameters = {
-    PoseAndShapeParameters(theta.rotationParameters + perturbationDistr.sample, theta.translationParameters, theta.modelCoefficients)
-  }
-
-  override def logTransitionProbability(from: PoseAndShapeParameters, to: PoseAndShapeParameters) = {
-    val residual = to.rotationParameters - from.rotationParameters
-    perturbationDistr.logpdf(residual)
-  }
-}
-
-case class TranslationUpdateProposal(stdev: Float) extends
-  ProposalGenerator[PoseAndShapeParameters] with TransitionProbability[PoseAndShapeParameters] with SymmetricTransition[PoseAndShapeParameters] {
-
-  val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(3),
-    DenseMatrix.eye[Float](3) * stdev)
-
-  def propose(theta: PoseAndShapeParameters): PoseAndShapeParameters = {
-    PoseAndShapeParameters(theta.rotationParameters, theta.translationParameters + perturbationDistr.sample, theta.modelCoefficients)
-  }
-
-  override def logTransitionProbability(from: PoseAndShapeParameters, to: PoseAndShapeParameters) = {
-    val residual = to.translationParameters - from.translationParameters
-    perturbationDistr.logpdf(residual)
-  }
-}
