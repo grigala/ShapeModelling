@@ -8,9 +8,7 @@ import scalismo.io._
 import scalismo.mesh.TriangleMesh
 import scalismo.sampling.algorithms._
 import scalismo.sampling.evaluators._
-import scalismo.sampling.loggers._
 import scalismo.sampling.proposals._
-import scalismo.sampling._
 import scalismo.statisticalmodel.asm._
 import scalismo.ui.api.SimpleAPI.ScalismoUI
 
@@ -28,7 +26,7 @@ object P2 {
     scalismo.initialize()
 
 
-    val reconstructFemurNo = 8
+    val reconstructFemurNo = 10
 
     val targetName: String = reconstructFemurNo match {
       //test with groundtruth

@@ -1,16 +1,14 @@
 package p2
 
 
-import breeze.linalg.{DenseMatrix, DenseVector, diag}
-import breeze.stats.distributions.Gaussian
-import scalismo.geometry.{Point, SquareMatrix, Vector3D, _3D}
+import java.util.NoSuchElementException
+
+import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.sampling.{DistributionEvaluator, ProposalGenerator, SymmetricTransition, TransitionProbability}
 import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
-import scalismo.statisticalmodel.{MultivariateNormalDistribution, NDimensionalNormalDistribution, StatisticalMeshModel}
+import scalismo.statisticalmodel.{MultivariateNormalDistribution}
 
 /**
-  * Porting 15th tutorial Code as a helper class
-  *
   * Created by George on 19/5/2017.
   */
 
@@ -82,36 +80,19 @@ case class CorrespondenceEvaluator(model: ActiveShapeModel, preprocessedGradient
 
     val currModelInstance = model.statisticalModel.instance(theta.modelCoefficients)
     val ids = model.profiles.ids
+    try{
+      val likelihoods = for (id <- ids) yield {
+        val profile = model.profiles(id)
+        val profilePointOnMesh = currModelInstance.point(profile.pointId)
+        val featureAtPoint = model.featureExtractor(preprocessedGradientImage, profilePointOnMesh, currModelInstance, profile.pointId).get
+        profile.distribution.logpdf(featureAtPoint)
 
-    val likelihoods = for (id <- ids) yield {
-      val profile = model.profiles(id)
-      val profilePointOnMesh = currModelInstance.point(profile.pointId)
-      val featureAtPoint = model.featureExtractor(preprocessedGradientImage, profilePointOnMesh, currModelInstance, profile.pointId).get
-      profile.distribution.logpdf(featureAtPoint)
-    }
-    val loglikelihood = likelihoods.sum
-    loglikelihood
-  }
-}
-
-case class ProximityEvaluator(model: StatisticalMeshModel, targetLandmarks: Seq[Point[_3D]],
-                              sdev: Double = 1.0) extends DistributionEvaluator[ShapeParameters] {
-
-  val uncertainty = NDimensionalNormalDistribution(Vector3D(0f, 0f, 0f), SquareMatrix.eye[_3D] * (sdev * sdev))
-
-  override def logValue(theta: ShapeParameters): Double = {
-
-    val currModelInstance = model.instance(theta.modelCoefficients)
-
-    val likelihoods = targetLandmarks.map { targetLandmark =>
-      val closestPointCurrentFit = currModelInstance.findClosestPoint(targetLandmark).point
-      val observedDeformation = targetLandmark - closestPointCurrentFit
-      uncertainty.logpdf(observedDeformation)
+      }
+      likelihoods.sum
+    }catch {
+      case e:NoSuchElementException => -breeze.numerics.inf
     }
 
-    val loglikelihood = likelihoods.sum
-    loglikelihood
   }
 }
-
 
