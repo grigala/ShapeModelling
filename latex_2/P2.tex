@@ -102,8 +102,10 @@
 	
 	We made use of two different but similar proposal mechanisms:
 	\begin{enumerate}
-		\item A random walk of $\theta$, where all parameters in the set $\theta$ are updated at once with: $\theta_{proposed} = \theta_{old} + d \quad d \sim \mathcal{N}(0,\sigma I)$
-		\item A random walk of $\theta$, where only one individual parameter $theta^(i)$ is updated with: $\theta_{proposed}^{(i)} = \theta_{old}^{(i)} + d \quad d \sim \mathcal{N}(0,\sigma)$
+		\item A random walk of $\theta$, where all parameters in the set $\theta$ are updated at once with: 
+		$$\theta_{proposed} = \theta_{old} + d \quad d \sim \mathcal{N}(0,\sigma I)$$
+		\item A random walk of $\theta$, where only one individual parameter $theta^(i)$ is updated with: 
+		$$\theta_{proposed}^{(i)} = \theta_{old}^{(i)} + d \quad d \sim \mathcal{N}(0,\sigma)$$
 	\end{enumerate}
 	\begin{figure}
 		\centering
