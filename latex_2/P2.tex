@@ -61,31 +61,33 @@
 	The difficulty arises due to partial volume effects, artifacts in the image and general noise.
 	The aim of the project is the segmentation of 5 femurs, for each of which a CT scan image is provided. 
 		
-	The approach presented in this paper relies on an active shape model for femurs, which is a combination of a statistical shape model and an intensity model.
+	The approach presented in this paper relies on an active shape model(ASM) for femurs, which is a combination of a statistical shape model and an intensity model.
 	The Shape Model provides a probability distribution over femur shapes, which was presumably learned from observed data.
 	The intensity model models the intensities at areas around given profile points of the shape model.	
 
 
 	\section{Method}
 	Our aim is finding a femur shape defined by the parameter set $\theta$ which explains the image intensities observed in the CT as good as possible while still considering realistic and likely femur shapes.
-	More formally we search for:
+	More formally we search for the following maximum a posteriori estimation:
 	\begin{equation}
-	\theta* = \arg\max_\theta \frac{p(\theta) P(I_T | \theta)}{\int p(\theta) p(I_T | \theta) \delta\theta}
+	\theta^* = \arg\max_\theta \frac{p(\theta) P(I_T | \theta)}{\int p(\theta) p(I_T | \theta) \delta\theta}
 	\end{equation}	
+	So the likelihood of the observed image as well as the prior probability of the parameters that define a shape are necessary.
 	
 	The used ASM models the image intensities as normal distributions for specific profile points, which lie orthogonal to the shapes.
-	The mean intensities are visualized in \autoref{1.1}.
 	In the segmentation procedure we can use this for evaluating the likelihood for observing intensities at the position of the profile points for a specific shape instance.
+	The mean intensities of the provided ASM are visualized in \autoref{1.1}.
+	
 	\begin{equation}
-	p(I_T (h_\theta (x_i)) | \theta,x_i ) = \mathcal{N}(\mu_i, \Sigma_i) 
+	p(I_T | \theta) = \mathcal{N}(\mu_i, \Sigma_i) 
 	\end{equation}
-	where $\theta$ is a possible set of parameters that defines an instances of the shape model.
+	where $\theta$ is a possible set of parameters that defines an instance of the shape model.
 	
 	By assuming that the noise at the different profile points are independent and identically distributed, we can calculate the total likelihood of an image by taking the product of the likelihoods.
 	
 	
 	\begin{equation}
-	p(I_T(h_\theta (x))|\theta, \Gamma_R) = \prod_{i} \mathcal{N}(\mu_i, \Sigma_i)
+	p(I_T|\theta) = \prod_{i} \mathcal{N}(\mu_i, \Sigma_i)
 	\end{equation}
 	
 	
