@@ -63,12 +63,13 @@
 		
 	The approach presented in this paper relies on an active shape model for femurs, which is a combination of a statistical shape model and an intensity model.
 	The Shape Model provides a probability distribution over femur shapes, which was presumably learned from observed data.
-	The intensity model models the pixel intensities at ranges around given profile points of the shape model.	
+	The intensity model models the intensities at areas around given profile points of the shape model.	
 
 
 	\section{Method}
 	\subsection{Active Shape Model}
-	The pixel intensity model 
+	The used ASM models the intensities as normal distributions for specific profile points, which lie orthogonal to the shape.
+	
 	
 	\begin{figure}
 		\centering
