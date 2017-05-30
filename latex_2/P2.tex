@@ -67,9 +67,16 @@
 
 
 	\section{Method}
-	\subsection{Active Shape Model}
 	The used ASM models the intensities as normal distributions for specific profile points, which lie orthogonal to the shape.
 	The mean intensities are visualized in \autoref{1.1}.
+	In the segmentation procedure we can use this for evaluating the likelihood for observing intensities at the position of the profile points for a specific shape instance.
+	\begin{equation}
+	p(I_T (h_\theta (x_i)) | \theta,x_i ) = \mathcal{\mu_i, \Sigma_i} 
+	\end{equation}
+	By assuming that the noise at the different profile points are independent and identically distributed, we can calculate the total likelihood of a image by taking the product.
+	\begin{equation}
+	p(I_T(h_\theta (x))|\theta, \Gamma_R) = \prod_{i} \mathcal{N}(\mu_i, \Sigma_i)
+	\end{equation}
 	
 	\begin{figure}
 		\centering
@@ -80,7 +87,6 @@
 			\label{1.1}
 		%\end{subfigure
 	\end{figure}	
-	\subsection{Metropolis Hastings}
 	\begin{equation}
 	Q(\theta' | \theta) = N(\theta'|\theta, \Sigma_\theta)
 	\end{equation}
