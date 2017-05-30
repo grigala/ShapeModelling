@@ -110,7 +110,8 @@
 	
 	Multiple of such proposals with different $\sigma$ (or different target parameters for the 2nd method) have then been combined into a big mixed proposal generator.
 	The individual values and sample probabilities are displayed in the following table.
-	It should be noted, that the probabilities of each 'update type' sum to one and the final mixture proposal first selects one of the two methods with the probability $0.5$.
+	It should be noted, that the probabilities of each 'update type' sum to one.
+	The final mixture proposal first selects one of the two methods with the probability $0.5$ and then a specific version of that with the following probabilities:
 	\begin{figure}
 		\centering
 		%\begin{subfigure}{.5\textwidth}
