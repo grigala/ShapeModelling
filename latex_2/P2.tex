@@ -107,6 +107,10 @@
 		\item A random walk of $\theta$, where only one individual parameter $theta^(i)$ is updated with: 
 		$$\theta_{proposed}^{(i)} = \theta_{old}^{(i)} + d \quad d \sim \mathcal{N}(0,\sigma)$$
 	\end{enumerate}
+	
+	Multiple of such proposals with different $\sigma$ (or different target parameters for the 2nd method) have then been combined into a big mixed proposal generator.
+	The individual values and sample probabilities are displayed in the following table.
+	It should be noted, that the probabilities of each 'update type' sum to one and the final mixture proposal first selects one of the two methods with the probability $0.5$.
 	\begin{figure}
 		\centering
 		%\begin{subfigure}{.5\textwidth}
