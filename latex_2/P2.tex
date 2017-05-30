@@ -70,10 +70,10 @@
 	Our aim is finding a femur shape defined by the parameter set $\theta$ which explains the image intensities observed in the CT as good as possible while still considering realistic and likely femur shapes.
 	More formally we search for:
 	\begin{equation}
-	\theta* = \frac{\arg\max_\theta p(\theta) P(I_T | \theta)}{\int p(\theta) p(I_T | \theta) \delta\theta}
+	\theta* = \arg\max_\theta \frac{p(\theta) P(I_T | \theta)}{\int p(\theta) p(I_T | \theta) \delta\theta}
 	\end{equation}	
 	
-	The used ASM models the intensities as normal distributions for specific profile points, which lie orthogonal to the shape.
+	The used ASM models the image intensities as normal distributions for specific profile points, which lie orthogonal to the shapes.
 	The mean intensities are visualized in \autoref{1.1}.
 	In the segmentation procedure we can use this for evaluating the likelihood for observing intensities at the position of the profile points for a specific shape instance.
 	\begin{equation}
