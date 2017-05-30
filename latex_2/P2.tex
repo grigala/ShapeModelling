@@ -116,21 +116,19 @@
 			\label{1.1}
 		%\end{subfigure
 	\end{figure}	
+	
 
-	\begin{equation}
-	u = \mu + \sum_{i=1}^\infty \sqrt{\lambda_i} \phi_i \alpha_i, \quad \alpha_i \sim{} \mathcal{N}(0,1)
-	\end{equation}
 
 	\begin{center}
 		\begin{tabular}{l l l l l}
 			\toprule
 			update type & $\sigma$ & Probability \\
 			\midrule
-			Batch Random Walk $N(0, \Sigma)$&  0.001 & 	0.2  	\\
-			Batch Random Walk $N(0, \Sigma)$& 0.01 & 	0.4 	\\
-			Batch Random Walk $N(0, \Sigma)$& 0.05 &	0.2		\\
-			Batch Random Walk $N(0, \Sigma)$& 0.2&		0.2		\\
-			Single Parameter Random Walk $N(0,\sigma_i)$ & 0.1& $\frac{1}{rank(ShapeModel)}$
+			Batch Random Walk $N(0, \sigma I)$&  0.001 & 	0.2  	\\
+			Batch Random Walk $N(0, \sigma I)$& 0.01 & 	0.4 	\\
+			Batch Random Walk $N(0, \Sigma I)$& 0.05 &	0.2		\\
+			Batch Random Walk $N(0, \Sigma I)$& 0.2&		0.2		\\
+			Single Parameter Random Walk $N(0,\sigma)$ & 0.1& $\frac{1}{rank(ShapeModel)}$
 		\end{tabular}
 	\end{center}
 	\section{Problems}
