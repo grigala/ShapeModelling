@@ -3,10 +3,11 @@ package p2
 
 import java.util.NoSuchElementException
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg._
+import breeze.stats.distributions.Gaussian
 import scalismo.sampling.{DistributionEvaluator, ProposalGenerator, SymmetricTransition, TransitionProbability}
 import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
-import scalismo.statisticalmodel.{MultivariateNormalDistribution}
+import scalismo.statisticalmodel.MultivariateNormalDistribution
 
 /**
   * Created by George on 19/5/2017.
@@ -34,28 +35,29 @@ case class GaussianProposal(paramVectorSize: Int, stdev: Float) extends
   }
 }
 
-case class ScaleProposal(stdev: Float) extends
-  ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters]{
+case class SparseGaussianProposal(paramVectorSize: Int, position:Int, stdev: Float) extends
+  ProposalGenerator[ShapeParameters] with TransitionProbability[ShapeParameters] with SymmetricTransition[ShapeParameters] {
 
-  val scaleDistr = new MultivariateNormalDistribution(DenseVector.ones(1),
+  require(position<paramVectorSize)
+
+  val perturbationDistr = new MultivariateNormalDistribution(DenseVector.zeros(1),
     DenseMatrix.eye[Float](1) * stdev)
 
   override def propose(theta: ShapeParameters): ShapeParameters = {
-    val scale = scaleDistr.sample()
-    val thetaPrime = ShapeParameters(theta.modelCoefficients * scale.valueAt(0))
+    val perturbation = perturbationDistr.sample()
+    val perturbationVector = DenseVector.zeros[Float](paramVectorSize)
+    perturbationVector(position) = perturbation.valueAt(0)
+    val thetaPrime = ShapeParameters(theta.modelCoefficients + perturbationVector)
     thetaPrime
   }
 
 
   override def logTransitionProbability(from: ShapeParameters, to: ShapeParameters) = {
-    val quotient = to.modelCoefficients.valueAt(0) / from.modelCoefficients.valueAt(0)
-    if(!quotient.toDouble.isNaN){
-      scaleDistr.logpdf(DenseVector.fill(1,quotient))
-    }else{
-      -breeze.numerics.inf
-    }
+    val residual = to.modelCoefficients - from.modelCoefficients
+    perturbationDistr.logpdf(DenseVector.zeros[Float](1)+residual.valueAt(position))
   }
 }
+
 
 /**
   * Prior probability

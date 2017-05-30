@@ -26,7 +26,7 @@ object P2 {
     scalismo.initialize()
 
 
-    val reconstructFemurNo = 10
+    val reconstructFemurNo = 7
 
     val targetName: String = reconstructFemurNo match {
       //test with groundtruth
@@ -62,13 +62,18 @@ object P2 {
     val randomWalkGenerator = MixtureProposal.fromSymmetricProposalsWithTransition((0.4, lowVarianceGenerator),(0.2,
       largeVarianceGenerator), (0.2, verylowVarianceGenerator), (0.2, verylowVarianceGenerator2))
 
+    //val sparseGenerator1 = SparseGaussianProposal(asm.statisticalModel.rank, 3, 0.1f)
+    val sparseGenerators : List[(Double, SparseGaussianProposal)] = List.tabulate(asm.statisticalModel.rank)(n =>
+      ((1.0/asm.statisticalModel.rank.toDouble), SparseGaussianProposal(asm.statisticalModel.rank, n, 0.1f)))
+    val sparseWalkGenerator = MixtureProposal.fromSymmetricProposalsWithTransition(sparseGenerators:_*)
 
+    val mixtureGenerator = MixtureProposal.fromSymmetricProposalsWithTransition((0.5, randomWalkGenerator), (0.5, sparseWalkGenerator))
     val likelihoodEvaluator = CorrespondenceEvaluator(asm, preProcessedGradientImage)
     val priorEvaluator = ShapePriorEvaluator(asm)
     val posteriorEvaluator = ProductEvaluator(priorEvaluator, likelihoodEvaluator)
 
 
-    val chain = MetropolisHastings(randomWalkGenerator, posteriorEvaluator , logger)
+    val chain = MetropolisHastings(mixtureGenerator, posteriorEvaluator , logger)
 
     val initialParameters = ShapeParameters(DenseVector.zeros[Float](asm.statisticalModel.rank))
     //val initialParameters = ShapeParameters(asm.statisticalModel.coefficients(asm.statisticalModel.mean))
@@ -82,7 +87,7 @@ object P2 {
     }
     val time1 = System.currentTimeMillis()
 
-    val samples = samplingIterator.take(10000)
+    val samples = samplingIterator.take(5000)
 
     val bestSample = samples.maxBy(posteriorEvaluator.logValue)
 
