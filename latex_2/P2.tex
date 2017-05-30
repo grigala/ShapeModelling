@@ -71,7 +71,7 @@
 	The mean intensities are visualized in \autoref{1.1}.
 	In the segmentation procedure we can use this for evaluating the likelihood for observing intensities at the position of the profile points for a specific shape instance.
 	\begin{equation}
-	p(I_T (h_\theta (x_i)) | \theta,x_i ) = \mathcal{\mu_i, \Sigma_i} 
+	p(I_T (h_\theta (x_i)) | \theta,x_i ) = \mathcal{N}(\mu_i, \Sigma_i) 
 	\end{equation}
 	By assuming that the noise at the different profile points are independent and identically distributed, we can calculate the total likelihood of a image by taking the product.
 	\begin{equation}
