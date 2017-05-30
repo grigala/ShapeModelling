@@ -136,9 +136,10 @@
 		\end{tabular}
 	\end{center}
 	\section{Problems}
-	The main problem that we faced was the very low acceptance rate.
+	The main problem that we faced was the very low acceptance rate with the initial update scheme (only batch updates, ~100 accepted for 10000 drawn samples).
 	Our approach for fixing this was based on using smaller updates for the proposals as well as only updating individual parameters.
-	Although that increased the sample rate a little bit, the acceptance rate is still rather low with $\sim 5\%$.
+	Although that increased the sample rate a little bit, the acceptance rate is still rather low with $\sim 5\%$ (~250 accepted for 5000 drawn samples).
+	
 	
 	\section{Results \& Discussions}
 		\begin{figure}
