@@ -138,7 +138,7 @@
 	\section{Problems}
 	The main problem that we faced was the very low acceptance rate with the initial update scheme (only batch updates, ~100 accepted for 10000 drawn samples).
 	Our approach for fixing this was based on using smaller updates for the proposals as well including updates of individual parameters.
-	Although that increased the sample rate a little bit, the acceptance rate is still rather low with $\sim 5\%$ (~250 accepted fsor 5000 drawn samples).
+	Although that increased the sample rate a little bit, the acceptance rate is still rather low with $\sim 5\%$ (~250 accepted for 5000 drawn samples).
 	
 	Another problem that we faced was an error occurring at the likelihood evaluation of the CT image \textit{10.nii}. We assume this was caused by instances of the femur shape that were out of the CT images range (see \autoref{2.2}). As such there were no intensities that could be evaluated. 
 	Furthermore this image differs from the other ones, as it also contains another foot of the scanned person (see \autoref 2.1), but this did not cause any complications.
