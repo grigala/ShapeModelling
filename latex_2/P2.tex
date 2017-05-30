@@ -73,10 +73,13 @@
 	\begin{equation}
 	p(I_T (h_\theta (x_i)) | \theta,x_i ) = \mathcal{N}(\mu_i, \Sigma_i) 
 	\end{equation}
-	By assuming that the noise at the different profile points are independent and identically distributed, we can calculate the total likelihood of a image by taking the product.
+	where $\theta$ defines the set of parameters that define instances of the shape model.
+	By assuming that the noise at the different profile points are independent and identically distributed, we can calculate the total likelihood of an image by taking the product of the likelihoods.
 	\begin{equation}
 	p(I_T(h_\theta (x))|\theta, \Gamma_R) = \prod_{i} \mathcal{N}(\mu_i, \Sigma_i)
 	\end{equation}
+	
+	
 	
 	\begin{figure}
 		\centering
