@@ -12,8 +12,6 @@ import scalismo.sampling.proposals._
 import scalismo.statisticalmodel.asm._
 import scalismo.ui.api.SimpleAPI.ScalismoUI
 
-import scala.util.Random
-
 /**
   * Main working class for second project, that is a model-based segmentation
   * of 5 CT femur images using MCMC methods and Active Shape Models.
@@ -45,7 +43,7 @@ object P2 {
 
 
     val asm: ActiveShapeModel = ActiveShapeModelIO.readActiveShapeModel(new File("handedData/femur-asm.h5")).get
-    val image = ImageIO.read3DScalarImage[Short](new File(targetName+".nii")).get.map(_.toFloat)
+    val image = ImageIO.read3DScalarImage[Short](new File(targetName + ".nii")).get.map(_.toFloat)
 
     val preProcessedGradientImage: PreprocessedImage = asm.preprocessor(image)
 
@@ -53,13 +51,13 @@ object P2 {
     println("Defining the Markov chain...")
     implicit val random = scala.util.Random
 
-    val largeVarianceGenerator =  GaussianProposal(asm.statisticalModel.rank, 0.2f)
+    val largeVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.2f)
     val lowVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.01f)
     val verylowVarianceGenerator = GaussianProposal(asm.statisticalModel.rank, 0.001f)
     val verylowVarianceGenerator2 = GaussianProposal(asm.statisticalModel.rank, 0.05f)
 
 
-    val randomWalkGenerator = MixtureProposal.fromSymmetricProposalsWithTransition((0.4, lowVarianceGenerator),(0.2,
+    val randomWalkGenerator = MixtureProposal.fromSymmetricProposalsWithTransition((0.4, lowVarianceGenerator), (0.2,
       largeVarianceGenerator), (0.2, verylowVarianceGenerator), (0.2, verylowVarianceGenerator2))
 
     //val sparseGenerator1 = SparseGaussianProposal(asm.statisticalModel.rank, 3, 0.1f)
@@ -103,11 +101,11 @@ object P2 {
 
     println(s"#Accepted: ${countAccepted.toString} #Rejected: ${countRejected.toString}")
     println(bestSample.modelCoefficients)
-    if(reconstructFemurNo<=5){
-      val target: TriangleMesh = MeshIO.readMesh(new File(targetName+".stl")).get
+    if (reconstructFemurNo <= 5) {
+      val target: TriangleMesh = MeshIO.readMesh(new File(targetName + ".stl")).get
       ui.show(target, "groundtruthFemur")
-      val diff = bestModel.pointIds.map{
-        id : PointId => (target.point(id) - bestModel.point(id)).norm
+      val diff = bestModel.pointIds.map {
+        id: PointId => (target.point(id) - bestModel.point(id)).norm
       }.sum
       println(s"Diff: ${diff}")
     }

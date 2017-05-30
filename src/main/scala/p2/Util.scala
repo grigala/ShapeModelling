@@ -6,8 +6,8 @@ import java.util.NoSuchElementException
 import breeze.linalg._
 import breeze.stats.distributions.Gaussian
 import scalismo.sampling.{DistributionEvaluator, ProposalGenerator, SymmetricTransition, TransitionProbability}
-import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
 import scalismo.statisticalmodel.MultivariateNormalDistribution
+import scalismo.statisticalmodel.asm.{ActiveShapeModel, PreprocessedImage}
 
 /**
   * Created by George on 19/5/2017.
@@ -75,14 +75,14 @@ case class ShapePriorEvaluator(model: ActiveShapeModel) extends DistributionEval
   *
   * @param model ActiveShapeModel
   */
-case class CorrespondenceEvaluator(model: ActiveShapeModel, preprocessedGradientImage : PreprocessedImage) extends
+case class CorrespondenceEvaluator(model: ActiveShapeModel, preprocessedGradientImage: PreprocessedImage) extends
   DistributionEvaluator[ShapeParameters] {
 
   override def logValue(theta: ShapeParameters): Double = {
 
     val currModelInstance = model.statisticalModel.instance(theta.modelCoefficients)
     val ids = model.profiles.ids
-    try{
+    try {
       val likelihoods = for (id <- ids) yield {
         val profile = model.profiles(id)
         val profilePointOnMesh = currModelInstance.point(profile.pointId)
@@ -91,8 +91,8 @@ case class CorrespondenceEvaluator(model: ActiveShapeModel, preprocessedGradient
 
       }
       likelihoods.sum
-    }catch {
-      case e:NoSuchElementException => -breeze.numerics.inf
+    } catch {
+      case e: NoSuchElementException => -breeze.numerics.inf
     }
 
   }
