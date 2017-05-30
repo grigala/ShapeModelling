@@ -77,13 +77,13 @@
 	The used ASM models the image intensities as normal distributions for specific profile points, which lie orthogonal to the shapes.
 	In the segmentation procedure we can use this for evaluating the likelihood for observing intensities at the position of the profile points for a specific shape instance.
 	The mean intensities of the provided ASM are visualized in \autoref{1.1}.
-	
+	With this we have:
 	\begin{equation}
 	p(I_T | \theta) = \mathcal{N}(\mu_i, \Sigma_i) 
 	\end{equation}
 	where $\theta$ is a possible set of parameters that defines an instance of the shape model.
 	
-	By assuming that the noise at the different profile points are independent and identically distributed, we can calculate the total likelihood of an image by taking the product of the likelihoods.
+	By assuming that the noise at the different profile points is independent and identically distributed, we can calculate the total likelihood of an image by taking the product of the likelihoods.
 	
 	
 	\begin{equation}
